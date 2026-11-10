@@ -8,7 +8,7 @@ interface FooterProps {
 export function Footer({ onNavigate }: FooterProps) {
   return (
     <footer className="border-t border-neutral-200 py-8 dark:border-neutral-800">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 font-mono text-xs text-neutral-500 sm:flex-row sm:px-6 dark:text-neutral-400">
+      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 font-mono text-xs text-neutral-500 sm:flex-row sm:px-8 dark:text-neutral-400">
         <div className="flex flex-wrap items-center gap-2">
           <span>{PROFILE.name}</span>
           <span>·</span>

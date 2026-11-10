@@ -111,11 +111,10 @@ export interface CredentialItem {
 }
 
 export interface StackRow {
+  id: string
   layer: 'lakehouse' | 'pipelines' | 'storage' | 'bi_ml'
   layerLabel: string
   technology: string
-  pattern: string
-  workload: string
 }
 
 export interface BlogSection {
@@ -135,6 +134,7 @@ export interface BlogPost {
   topic: 'Lakehouse' | 'ETL & Ingestion' | 'Data Modeling'
   publishedAt: string
   readTime: string
+  views: number
   excerpt: string
   tags: string[]
   sections: BlogSection[]

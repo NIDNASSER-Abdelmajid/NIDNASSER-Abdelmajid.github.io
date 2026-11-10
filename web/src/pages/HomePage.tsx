@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { GitHubIcon, LinkedInIcon } from '../components/BrandIcons'
 import { PipelineTopology } from '../components/PipelineTopology'
+import { ProfilePhoto } from '../components/ProfilePhoto'
 import { BLOG_POSTS } from '../data/blog'
 import { PROFILE, PROJECTS } from '../data/portfolio'
 
@@ -31,11 +32,25 @@ const MODULE_LINKS = [
 export function HomePage({ copied, onCopyEmail, onNavigate }: HomePageProps) {
   return (
     <>
-      <section className="bg-blueprint-grid py-16 sm:py-24">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12">
-            <div className="lg:col-span-5">
-              <div className="mb-5 flex flex-wrap items-center gap-3 font-mono text-xs text-neutral-600 dark:text-neutral-400">
+      <section className="bg-blueprint-grid py-10 @2xl:py-16 @5xl:py-20">
+        <div className="mx-auto max-w-6xl px-4 sm:px-8">
+          <div className="grid grid-cols-1 items-center gap-10 @5xl:grid-cols-12 @5xl:gap-12">
+            <div className="@5xl:col-span-5">
+              <div className="mb-5 flex items-center gap-4 md:hidden">
+                <ProfilePhoto name={PROFILE.name} photoUrl={PROFILE.photoUrl} size="compact" />
+                <div className="flex flex-wrap items-center gap-2 font-mono text-xs text-neutral-600 dark:text-neutral-400">
+                  <span className="inline-flex items-center gap-2 rounded bg-neutral-200/70 px-2.5 py-1 font-medium text-neutral-900 dark:bg-neutral-800/80 dark:text-neutral-100">
+                    <span className="h-1.5 w-1.5 rounded-full bg-neutral-950 dark:bg-neutral-50" />
+                    {PROFILE.role}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5" strokeWidth={1.8} />
+                    {PROFILE.location}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mb-5 hidden flex-wrap items-center gap-3 font-mono text-xs text-neutral-600 md:flex dark:text-neutral-400">
                 <span className="inline-flex items-center gap-2 rounded bg-neutral-200/70 px-2.5 py-1 font-medium text-neutral-900 dark:bg-neutral-800/80 dark:text-neutral-100">
                   <span className="h-1.5 w-1.5 rounded-full bg-neutral-950 dark:bg-neutral-50" />
                   {PROFILE.role}
@@ -46,7 +61,7 @@ export function HomePage({ copied, onCopyEmail, onNavigate }: HomePageProps) {
                 </span>
               </div>
 
-              <h1 className="text-4xl font-semibold leading-[1.1] tracking-tight text-neutral-950 sm:text-5xl dark:text-neutral-50">
+              <h1 className="text-3xl font-semibold leading-[1.1] tracking-tight text-neutral-950 @md:text-4xl @6xl:text-5xl dark:text-neutral-50">
                 {PROFILE.name}
               </h1>
 
@@ -127,7 +142,7 @@ export function HomePage({ copied, onCopyEmail, onNavigate }: HomePageProps) {
               </div>
             </div>
 
-            <div className="lg:col-span-7">
+            <div className="@5xl:col-span-7">
               <PipelineTopology />
             </div>
           </div>
@@ -136,8 +151,8 @@ export function HomePage({ copied, onCopyEmail, onNavigate }: HomePageProps) {
 
       {/* Clean Minimal Module Directory Strip */}
       <section className="border-t border-neutral-200 py-10 dark:border-neutral-800">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="grid grid-cols-2 divide-y divide-neutral-200 sm:grid-cols-5 sm:divide-x sm:divide-y-0 dark:divide-neutral-800">
+        <div className="mx-auto max-w-6xl px-4 sm:px-8">
+          <div className="grid grid-cols-2 divide-y divide-neutral-200 @3xl:grid-cols-5 @3xl:divide-x @3xl:divide-y-0 dark:divide-neutral-800">
             {MODULE_LINKS.map((item) => {
               const Icon = item.icon
               return (

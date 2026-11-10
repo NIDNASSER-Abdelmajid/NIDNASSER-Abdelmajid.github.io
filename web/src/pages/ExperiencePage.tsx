@@ -14,11 +14,11 @@ export function ExperiencePage() {
   const showCredentials = filter === 'All' || filter === 'Credentials'
 
   return (
-    <section className="py-16 sm:py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
-          <div className="lg:col-span-4">
-            <div className="lg:sticky lg:top-24">
+    <section className="py-10 sm:py-14">
+      <div className="mx-auto max-w-6xl px-4 sm:px-8">
+        <div className="grid grid-cols-1 gap-10 @4xl:grid-cols-12 @4xl:gap-12">
+          <div className="@4xl:col-span-4">
+            <div className="@4xl:sticky @4xl:top-10">
               <div className="mb-2 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
                 <Briefcase className="h-3.5 w-3.5" strokeWidth={1.8} />
                 <span>02 // Execution Log</span>
@@ -52,7 +52,7 @@ export function ExperiencePage() {
             </div>
           </div>
 
-          <div className="space-y-12 lg:col-span-8">
+          <div className="space-y-12 @4xl:col-span-8">
             {showExperience && (
               <div>
                 <div className="mb-4 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400">

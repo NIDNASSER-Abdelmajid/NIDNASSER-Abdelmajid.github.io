@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { ArrowRight, Database, Layers, Radio, Server, Terminal } from 'lucide-react'
+import { Database, Layers, Radio, Server, Terminal } from 'lucide-react'
+import { StackLogo } from '../components/StackLogos'
 import { STACK_MATRIX } from '../data/portfolio'
 import type { StackRow } from '../types/portfolio'
 
@@ -20,11 +21,7 @@ const LAYER_ORDER: { id: StackRow['layer']; title: string; icon: typeof Layers }
   { id: 'bi_ml', title: 'BI & Serving', icon: Server },
 ]
 
-interface StackPageProps {
-  onNavigate: (path: string) => void
-}
-
-export function StackPage({ onNavigate }: StackPageProps) {
+export function StackPage() {
   const [activeLayer, setActiveLayer] = useState<StackFilter>('all')
   const currentTab = QUERY_TABS.find((t) => t.id === activeLayer) ?? QUERY_TABS[0]
 
@@ -39,9 +36,9 @@ export function StackPage({ onNavigate }: StackPageProps) {
       : STACK_MATRIX.filter((r) => r.layer === activeLayer).length
 
   return (
-    <section className="py-16 sm:py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="mb-8 flex flex-col justify-between gap-6 border-b border-neutral-200 pb-8 lg:flex-row lg:items-end dark:border-neutral-800">
+    <section className="py-10 sm:py-14">
+      <div className="mx-auto max-w-6xl px-4 sm:px-8">
+        <div className="mb-8 flex flex-col justify-between gap-6 border-b border-neutral-200 pb-8 @4xl:flex-row @4xl:items-end dark:border-neutral-800">
           <div>
             <div className="mb-2 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
               <Layers className="h-3.5 w-3.5" strokeWidth={1.8} />
@@ -50,9 +47,6 @@ export function StackPage({ onNavigate }: StackPageProps) {
             <h1 className="text-3xl font-semibold tracking-tight text-neutral-950 sm:text-4xl dark:text-neutral-50">
               Tech Stack
             </h1>
-            <p className="mt-2 text-sm sm:text-base text-neutral-600 dark:text-neutral-400">
-              Core tools organized by architectural layer.
-            </p>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -76,8 +70,8 @@ export function StackPage({ onNavigate }: StackPageProps) {
           </div>
         </div>
 
-        {/* Clean SQL Prompt Bar */}
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-neutral-100/80 px-4 py-3 dark:bg-neutral-900">
+        {/* SQL Prompt Filter Status */}
+        <div className="mb-10 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-neutral-100/80 px-4 py-3 dark:bg-neutral-900">
           <div className="flex items-center gap-2 font-mono text-xs sm:text-sm text-neutral-900 dark:text-neutral-100">
             <Terminal className="h-4 w-4 text-neutral-500" strokeWidth={1.8} />
             <span className="break-all">{currentTab.sql}</span>
@@ -87,8 +81,8 @@ export function StackPage({ onNavigate }: StackPageProps) {
           </span>
         </div>
 
-        {/* 4-Layer Visual Shelves */}
-        <div className="space-y-8">
+        {/* Individual Monochrome Logo + Name Grid */}
+        <div className="space-y-10">
           {visibleLayers.map((layerMeta) => {
             const Icon = layerMeta.icon
             const items = STACK_MATRIX.filter((item) => item.layer === layerMeta.id)
@@ -100,32 +94,20 @@ export function StackPage({ onNavigate }: StackPageProps) {
                   <span>{layerMeta.title}</span>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 @xl:grid-cols-3 @3xl:grid-cols-4 @5xl:grid-cols-5">
                   {items.map((item) => (
-                    <button
-                      key={item.technology}
-                      type="button"
-                      onClick={() => onNavigate('/projects')}
-                      className="group flex flex-col justify-between rounded-xl border border-neutral-200 bg-white p-5 text-left transition-colors hover:border-neutral-950 dark:border-neutral-800 dark:bg-neutral-900/50 dark:hover:border-neutral-400"
+                    <div
+                      key={item.id}
+                      className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3.5 dark:border-neutral-800 dark:bg-neutral-900/50"
                     >
-                      <div>
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="rounded bg-neutral-100 px-2 py-0.5 font-mono text-xs text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">
-                            {item.workload}
-                          </span>
-                          <ArrowRight
-                            className="h-3.5 w-3.5 text-neutral-400 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100"
-                            strokeWidth={1.8}
-                          />
-                        </div>
-                        <div className="mt-3 text-base font-semibold text-neutral-950 dark:text-neutral-50">
-                          {item.technology}
-                        </div>
-                      </div>
-                      <div className="mt-2 font-mono text-xs text-neutral-600 dark:text-neutral-400">
-                        {item.pattern}
-                      </div>
-                    </button>
+                      <StackLogo
+                        id={item.id}
+                        className="h-5 w-5 shrink-0 text-neutral-900 dark:text-neutral-100"
+                      />
+                      <span className="text-sm font-medium text-neutral-950 dark:text-neutral-50">
+                        {item.technology}
+                      </span>
+                    </div>
                   ))}
                 </div>
               </div>

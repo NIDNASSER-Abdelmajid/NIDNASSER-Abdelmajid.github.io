@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   ArrowLeft,
   ArrowRight,
@@ -8,6 +8,7 @@ import {
   Clock,
   Code2,
   Copy,
+  Eye,
   Search,
 } from 'lucide-react'
 import { BLOG_POSTS } from '../data/blog'
@@ -16,6 +17,20 @@ import type { BlogPost } from '../types/portfolio'
 type TopicFilter = 'All' | BlogPost['topic']
 
 const TOPICS: TopicFilter[] = ['All', 'Lakehouse', 'ETL & Ingestion', 'Data Modeling']
+const VIEWS_STORAGE_KEY = 'blog-post-views-v1'
+
+function getInitialViewMap(): Record<string, number> {
+  const defaults = Object.fromEntries(BLOG_POSTS.map((p) => [p.slug, p.views]))
+  if (typeof window === 'undefined') return defaults
+  try {
+    const raw = window.localStorage.getItem(VIEWS_STORAGE_KEY)
+    if (!raw) return defaults
+    const parsed = JSON.parse(raw) as Record<string, number>
+    return { ...defaults, ...parsed }
+  } catch {
+    return defaults
+  }
+}
 
 interface BlogPageProps {
   activeSlug: string | null
@@ -26,12 +41,38 @@ export function BlogPage({ activeSlug, onNavigate }: BlogPageProps) {
   const [topic, setTopic] = useState<TopicFilter>('All')
   const [query, setQuery] = useState('')
   const [copiedCodeKey, setCopiedCodeKey] = useState<string | null>(null)
+  const [viewsMap, setViewsMap] = useState<Record<string, number>>(() => getInitialViewMap())
+
+  useEffect(() => {
+    if (!activeSlug) return
+    const sessionKey = `viewed-${activeSlug}`
+    try {
+      if (window.sessionStorage.getItem(sessionKey)) return
+      window.sessionStorage.setItem(sessionKey, '1')
+    } catch {
+      // ignore session storage errors
+    }
+
+    setViewsMap((prev) => {
+      const next = {
+        ...prev,
+        [activeSlug]: (prev[activeSlug] ?? 0) + 1,
+      }
+      try {
+        window.localStorage.setItem(VIEWS_STORAGE_KEY, JSON.stringify(next))
+      } catch {
+        // ignore storage errors
+      }
+      return next
+    })
+  }, [activeSlug])
 
   if (activeSlug) {
     const idx = BLOG_POSTS.findIndex((p) => p.slug === activeSlug)
     const post = idx >= 0 ? BLOG_POSTS[idx] : BLOG_POSTS[0]
     const prevPost = idx > 0 ? BLOG_POSTS[idx - 1] : null
     const nextPost = idx < BLOG_POSTS.length - 1 ? BLOG_POSTS[idx + 1] : null
+    const postViews = viewsMap[post.slug] ?? post.views
 
     const copyCode = (label: string, content: string) => {
       navigator.clipboard?.writeText(content).catch(() => {})
@@ -40,8 +81,8 @@ export function BlogPage({ activeSlug, onNavigate }: BlogPageProps) {
     }
 
     return (
-      <article className="py-16 sm:py-20">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6">
+      <article className="py-10 sm:py-14">
+        <div className="mx-auto max-w-3xl px-4 sm:px-8">
           <div className="mb-8 flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 pb-4 dark:border-neutral-800">
             <button
               type="button"
@@ -52,7 +93,7 @@ export function BlogPage({ activeSlug, onNavigate }: BlogPageProps) {
               <span>All Notes</span>
             </button>
 
-            <div className="flex items-center gap-3 font-mono text-xs text-neutral-500 dark:text-neutral-400">
+            <div className="flex flex-wrap items-center gap-3 font-mono text-xs text-neutral-500 dark:text-neutral-400">
               <span>{post.code}</span>
               <span>·</span>
               <span className="inline-flex items-center gap-1">
@@ -63,6 +104,11 @@ export function BlogPage({ activeSlug, onNavigate }: BlogPageProps) {
               <span className="inline-flex items-center gap-1">
                 <Clock className="h-3.5 w-3.5" strokeWidth={1.8} />
                 {post.readTime}
+              </span>
+              <span>·</span>
+              <span className="inline-flex items-center gap-1">
+                <Eye className="h-3.5 w-3.5" strokeWidth={1.8} />
+                {postViews.toLocaleString()} views
               </span>
             </div>
           </div>
@@ -182,9 +228,9 @@ export function BlogPage({ activeSlug, onNavigate }: BlogPageProps) {
   })
 
   return (
-    <section className="py-16 sm:py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="mb-8 flex flex-col justify-between gap-6 border-b border-neutral-200 pb-8 lg:flex-row lg:items-end dark:border-neutral-800">
+    <section className="py-10 sm:py-14">
+      <div className="mx-auto max-w-6xl px-4 sm:px-8">
+        <div className="mb-8 flex flex-col justify-between gap-6 border-b border-neutral-200 pb-8 @4xl:flex-row @4xl:items-end dark:border-neutral-800">
           <div>
             <div className="mb-2 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
               <BookOpen className="h-3.5 w-3.5" strokeWidth={1.8} />
@@ -242,44 +288,52 @@ export function BlogPage({ activeSlug, onNavigate }: BlogPageProps) {
               No articles matched your filter.
             </div>
           ) : (
-            filteredPosts.map((post) => (
-              <article
-                key={post.slug}
-                onClick={() => onNavigate(`/blog/${post.slug}`)}
-                className="group cursor-pointer p-6 transition-colors hover:bg-neutral-50 sm:p-7 dark:hover:bg-neutral-900"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-xs text-neutral-500 dark:text-neutral-400">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-neutral-900 dark:text-neutral-100">
-                      {post.code}
+            filteredPosts.map((post) => {
+              const postViews = viewsMap[post.slug] ?? post.views
+              return (
+                <article
+                  key={post.slug}
+                  onClick={() => onNavigate(`/blog/${post.slug}`)}
+                  className="group cursor-pointer p-6 transition-colors hover:bg-neutral-50 sm:p-7 dark:hover:bg-neutral-900"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-xs text-neutral-500 dark:text-neutral-400">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-neutral-900 dark:text-neutral-100">
+                        {post.code}
+                      </span>
+                      <span>·</span>
+                      <span>{post.topic}</span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span>{post.publishedAt}</span>
+                      <span>·</span>
+                      <span>{post.readTime}</span>
+                      <span>·</span>
+                      <span className="inline-flex items-center gap-1">
+                        <Eye className="h-3.5 w-3.5" strokeWidth={1.8} />
+                        {postViews.toLocaleString()} views
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-2.5 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                    <div>
+                      <h2 className="text-xl font-semibold tracking-tight text-neutral-950 dark:text-neutral-50">
+                        {post.title}
+                      </h2>
+                      <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">
+                        {post.excerpt}
+                      </p>
+                    </div>
+
+                    <span className="inline-flex shrink-0 items-center gap-1.5 font-mono text-xs font-medium text-neutral-900 transition-transform group-hover:translate-x-0.5 dark:text-neutral-100">
+                      <span>Read</span>
+                      <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.8} />
                     </span>
-                    <span>·</span>
-                    <span>{post.topic}</span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span>{post.publishedAt}</span>
-                    <span>·</span>
-                    <span>{post.readTime}</span>
-                  </div>
-                </div>
-
-                <div className="mt-2.5 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-                  <div>
-                    <h2 className="text-xl font-semibold tracking-tight text-neutral-950 dark:text-neutral-50">
-                      {post.title}
-                    </h2>
-                    <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">
-                      {post.excerpt}
-                    </p>
-                  </div>
-
-                  <span className="inline-flex shrink-0 items-center gap-1.5 font-mono text-xs font-medium text-neutral-900 transition-transform group-hover:translate-x-0.5 dark:text-neutral-100">
-                    <span>Read</span>
-                    <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.8} />
-                  </span>
-                </div>
-              </article>
-            ))
+                </article>
+              )
+            })
           )}
         </div>
       </div>

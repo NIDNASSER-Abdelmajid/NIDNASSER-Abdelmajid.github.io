@@ -40,9 +40,9 @@ export function ProjectsPage({ activeProjectId, onNavigate }: ProjectsPageProps)
       : PROJECTS.filter((project) => project.category === selectedCategory)
 
   return (
-    <section className="py-16 sm:py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="mb-10 flex flex-col justify-between gap-6 border-b border-neutral-200 pb-8 lg:flex-row lg:items-end dark:border-neutral-800">
+    <section className="py-10 sm:py-14">
+      <div className="mx-auto max-w-6xl px-4 sm:px-8">
+        <div className="mb-10 flex flex-col justify-between gap-6 border-b border-neutral-200 pb-8 @4xl:flex-row @4xl:items-end dark:border-neutral-800">
           <div>
             <div className="mb-2 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
               <Database className="h-3.5 w-3.5" strokeWidth={1.8} />
@@ -83,7 +83,7 @@ export function ProjectsPage({ activeProjectId, onNavigate }: ProjectsPageProps)
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
+        <div className="grid grid-cols-1 gap-6 @3xl:grid-cols-2 @3xl:gap-8">
           {filteredProjects.map((project: ProjectItem) => {
             const CategoryIcon = CATEGORY_ICONS[project.category]
 

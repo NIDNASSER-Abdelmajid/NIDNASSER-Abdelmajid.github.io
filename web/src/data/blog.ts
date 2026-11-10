@@ -8,6 +8,7 @@ export const BLOG_POSTS: BlogPost[] = [
     topic: 'Lakehouse',
     publishedAt: '2026-10-18',
     readTime: '4 min read',
+    views: 428,
     excerpt:
       'Keeping Bronze-to-Silver Delta merges deterministic across retries using batch watermarks and QUALIFY ranking.',
     tags: ['Databricks', 'Delta Lake', 'CDC', 'SQL'],
@@ -52,6 +53,7 @@ WHEN NOT MATCHED THEN INSERT *;`,
     topic: 'ETL & Ingestion',
     publishedAt: '2026-09-29',
     readTime: '4 min read',
+    views: 314,
     excerpt:
       'Decoupling noisy headless web capture from CPU-heavy OCR and PySpark deduplication via Parquet checkpoints.',
     tags: ['Apache Spark', 'Python', 'Crawlers', 'Data Quality'],
@@ -86,6 +88,7 @@ WHEN NOT MATCHED THEN INSERT *;`,
     topic: 'Data Modeling',
     publishedAt: '2026-08-14',
     readTime: '3 min read',
+    views: 269,
     excerpt:
       'Unifying Salesforce, Odoo, and SAP starts with conformed client crosswalks and automated GL reconciliation.',
     tags: ['SQL', 'Star Schema', 'Modeling', 'BI'],

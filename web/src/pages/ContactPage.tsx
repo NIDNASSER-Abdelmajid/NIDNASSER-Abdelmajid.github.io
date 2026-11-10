@@ -16,8 +16,8 @@ const FOCUS_TAGS = [
 
 export function ContactPage({ copied, onCopyEmail }: ContactPageProps) {
   return (
-    <section className="py-16 sm:py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+    <section className="py-10 sm:py-14">
+      <div className="mx-auto max-w-6xl px-4 sm:px-8">
         <div className="mb-10 border-b border-neutral-200 pb-8 dark:border-neutral-800">
           <div className="mb-2 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
             <Terminal className="h-3.5 w-3.5" strokeWidth={1.8} />
@@ -31,8 +31,8 @@ export function ContactPage({ copied, onCopyEmail }: ContactPageProps) {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-          <div className="rounded-xl border border-neutral-200 bg-white p-6 sm:p-8 lg:col-span-7 dark:border-neutral-800 dark:bg-neutral-900/50">
+        <div className="grid grid-cols-1 gap-8 @4xl:grid-cols-12">
+          <div className="rounded-xl border border-neutral-200 bg-white p-6 sm:p-8 @4xl:col-span-7 dark:border-neutral-800 dark:bg-neutral-900/50">
             <div className="flex flex-wrap items-center gap-3 font-mono text-xs text-neutral-600 dark:text-neutral-400">
               <span className="inline-flex items-center gap-2 rounded bg-neutral-100 px-2.5 py-1 text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100">
                 <span className="h-1.5 w-1.5 rounded-full bg-neutral-950 dark:bg-neutral-50" />
@@ -93,7 +93,7 @@ export function ContactPage({ copied, onCopyEmail }: ContactPageProps) {
             </div>
           </div>
 
-          <div className="lg:col-span-5">
+          <div className="@4xl:col-span-5">
             <div className="divide-y divide-neutral-200 rounded-xl border border-neutral-200 bg-white dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-900/50">
               <a
                 href={PROFILE.links.github}

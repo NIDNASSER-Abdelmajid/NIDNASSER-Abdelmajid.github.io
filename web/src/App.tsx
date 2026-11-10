@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { CommandPalette } from './components/CommandPalette'
 import { Footer } from './components/Footer'
-import { Header } from './components/Header'
+import { Sidebar } from './components/Sidebar'
 import { PROFILE } from './data/portfolio'
 import { useRouter } from './hooks/useRouter'
 import { useTheme } from './hooks/useTheme'
@@ -47,7 +47,7 @@ export function App() {
       case 'experience':
         return <ExperiencePage />
       case 'stack':
-        return <StackPage onNavigate={navigate} />
+        return <StackPage />
       case 'blog':
         return <BlogPage activeSlug={route.slug} onNavigate={navigate} />
       case 'contact':
@@ -65,8 +65,8 @@ export function App() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-neutral-50 text-neutral-950 dark:bg-neutral-950 dark:text-neutral-50">
-      <Header
+    <div className="min-h-screen bg-neutral-50 text-neutral-950 md:flex dark:bg-neutral-950 dark:text-neutral-50">
+      <Sidebar
         route={route}
         onNavigate={navigate}
         resolvedTheme={resolvedTheme}
@@ -76,9 +76,11 @@ export function App() {
         onOpenPalette={() => setPaletteOpen(true)}
       />
 
-      <main className="flex-1">{renderPage()}</main>
+      <div className="flex min-h-[calc(100vh-3.5rem)] min-w-0 flex-1 flex-col md:min-h-screen">
+        <main className="@container flex-1">{renderPage()}</main>
 
-      <Footer onNavigate={navigate} />
+        <Footer onNavigate={navigate} />
+      </div>
 
       <CommandPalette
         open={paletteOpen}
