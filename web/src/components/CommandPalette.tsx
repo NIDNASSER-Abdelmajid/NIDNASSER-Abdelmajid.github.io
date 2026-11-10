@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowRight,
+  BookOpen,
   Copy,
   GitBranch,
   Monitor,
@@ -9,6 +10,7 @@ import {
   Sun,
   X,
 } from 'lucide-react'
+import { BLOG_POSTS } from '../data/blog'
 import { PROFILE, PROJECTS } from '../data/portfolio'
 import type { ThemePreference } from '../hooks/useTheme'
 
@@ -24,16 +26,16 @@ interface CommandItem {
 interface CommandPaletteProps {
   open: boolean
   onClose: () => void
+  onNavigate: (path: string) => void
   onSelectTheme: (pref: ThemePreference) => void
-  onInspectProject: (projectId: string) => void
   onCopyEmail: () => void
 }
 
 export function CommandPalette({
   open,
   onClose,
+  onNavigate,
   onSelectTheme,
-  onInspectProject,
   onCopyEmail,
 }: CommandPaletteProps) {
   const [query, setQuery] = useState('')
@@ -43,57 +45,68 @@ export function CommandPalette({
   const commands = useMemo<CommandItem[]>(() => {
     const navItems: CommandItem[] = [
       {
-        id: 'nav-pipeline',
-        group: 'Navigate',
-        label: 'Jump to Interactive Pipeline',
-        hint: '#pipeline',
+        id: 'nav-home',
+        group: 'Pages',
+        label: 'Overview & Pipeline Topology',
+        hint: '/',
         icon: ArrowRight,
         action: () => {
-          window.location.hash = '#pipeline'
+          onNavigate('/')
           onClose()
         },
       },
       {
         id: 'nav-projects',
-        group: 'Navigate',
-        label: 'Jump to Pipeline Blueprints',
-        hint: '#projects',
+        group: 'Pages',
+        label: 'Projects Catalog',
+        hint: '/projects',
         icon: ArrowRight,
         action: () => {
-          window.location.hash = '#projects'
+          onNavigate('/projects')
           onClose()
         },
       },
       {
         id: 'nav-experience',
-        group: 'Navigate',
-        label: 'Jump to Execution Log',
-        hint: '#experience',
+        group: 'Pages',
+        label: 'Experience & Education',
+        hint: '/experience',
         icon: ArrowRight,
         action: () => {
-          window.location.hash = '#experience'
+          onNavigate('/experience')
           onClose()
         },
       },
       {
         id: 'nav-stack',
-        group: 'Navigate',
-        label: 'Jump to Technical Stack',
-        hint: '#stack',
+        group: 'Pages',
+        label: 'SQL Tech Stack Matrix',
+        hint: '/stack',
         icon: ArrowRight,
         action: () => {
-          window.location.hash = '#stack'
+          onNavigate('/stack')
+          onClose()
+        },
+      },
+      {
+        id: 'nav-blog',
+        group: 'Pages',
+        label: 'Data Engineering Blog',
+        hint: '/blog',
+        icon: ArrowRight,
+        action: () => {
+          onNavigate('/blog')
           onClose()
         },
       },
       {
         id: 'nav-contact',
-        group: 'Navigate',
-        label: 'Jump to Contact',
-        hint: '#contact',
+        group: 'Pages',
+        label: 'Contact & Profiles',
+        hint: '/contact',
         icon: ArrowRight,
         action: () => {
-          window.location.hash = '#contact'
+          onNavigate('/contact')
           onClose()
         },
       },
@@ -101,12 +114,24 @@ export function CommandPalette({
 
     const projectItems: CommandItem[] = PROJECTS.map((project) => ({
       id: `prj-${project.id}`,
-      group: 'Inspect Lineage',
+      group: 'Project Spec',
       label: `${project.code}: ${project.title}`,
       hint: project.category,
       icon: GitBranch,
       action: () => {
-        onInspectProject(project.id)
+        onNavigate(`/projects/${project.id}`)
+        onClose()
+      },
+    }))
+
+    const blogItems: CommandItem[] = BLOG_POSTS.map((post) => ({
+      id: `blog-${post.slug}`,
+      group: 'Blog',
+      label: `${post.code}: ${post.title}`,
+      hint: post.readTime,
+      icon: BookOpen,
+      action: () => {
+        onNavigate(`/blog/${post.slug}`)
         onClose()
       },
     }))
@@ -158,8 +183,8 @@ export function CommandPalette({
       },
     ]
 
-    return [...navItems, ...projectItems, ...utilityItems]
-  }, [onClose, onCopyEmail, onInspectProject, onSelectTheme])
+    return [...navItems, ...projectItems, ...blogItems, ...utilityItems]
+  }, [onClose, onCopyEmail, onNavigate, onSelectTheme])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -228,7 +253,7 @@ export function CommandPalette({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Type a command, project, or section..."
+            placeholder="Jump to page, project spec, or blog note..."
             className="w-full bg-transparent font-mono text-xs text-neutral-950 placeholder:text-neutral-400 focus:outline-none dark:text-neutral-50"
           />
           <button
@@ -284,4 +309,3 @@ export function CommandPalette({
     </div>
   )
 }
-

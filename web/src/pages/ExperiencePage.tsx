@@ -6,7 +6,7 @@ type LogFilter = 'All' | 'Experience' | 'Education' | 'Credentials'
 
 const FILTERS: LogFilter[] = ['All', 'Experience', 'Education', 'Credentials']
 
-export function ExperienceSection() {
+export function ExperiencePage() {
   const [filter, setFilter] = useState<LogFilter>('All')
 
   const showExperience = filter === 'All' || filter === 'Experience'
@@ -14,22 +14,18 @@ export function ExperienceSection() {
   const showCredentials = filter === 'All' || filter === 'Credentials'
 
   return (
-    <section
-      id="experience"
-      className="border-t border-neutral-200 py-20 sm:py-24 dark:border-neutral-800"
-    >
+    <section className="py-12 sm:py-16">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
-          {/* Left Sticky Rail */}
           <div className="lg:col-span-4">
             <div className="lg:sticky lg:top-24">
               <div className="mb-2 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
                 <Briefcase className="h-3.5 w-3.5" strokeWidth={1.8} />
-                <span>03 // Execution Log</span>
+                <span>02 // Execution Log</span>
               </div>
-              <h2 className="text-3xl font-semibold tracking-tight text-neutral-950 dark:text-neutral-50">
+              <h1 className="text-3xl font-semibold tracking-tight text-neutral-950 sm:text-4xl dark:text-neutral-50">
                 Experience &amp; Training
-              </h2>
+              </h1>
               <p className="mt-3 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
                 Engineering roles spanning enterprise financial warehouses, high-scale web
                 telemetry pipelines, startup data platforms, and formal CS engineering at INPT.
@@ -57,7 +53,6 @@ export function ExperienceSection() {
             </div>
           </div>
 
-          {/* Right Log Column */}
           <div className="space-y-10 lg:col-span-8">
             {showExperience && (
               <div className="space-y-6">
@@ -74,9 +69,9 @@ export function ExperienceSection() {
                     >
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div>
-                          <h3 className="text-base font-semibold text-neutral-950 dark:text-neutral-50">
+                          <h2 className="text-base font-semibold text-neutral-950 dark:text-neutral-50">
                             {exp.role}
-                          </h3>
+                          </h2>
                           <div className="mt-0.5 text-sm text-neutral-700 dark:text-neutral-300">
                             {exp.organization}
                           </div>
@@ -134,9 +129,9 @@ export function ExperienceSection() {
                     >
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div>
-                          <h3 className="text-base font-semibold text-neutral-950 dark:text-neutral-50">
+                          <h2 className="text-base font-semibold text-neutral-950 dark:text-neutral-50">
                             {edu.degree}
-                          </h3>
+                          </h2>
                           <div className="mt-0.5 text-sm text-neutral-700 dark:text-neutral-300">
                             {edu.institution}
                           </div>
@@ -201,4 +196,3 @@ export function ExperienceSection() {
     </section>
   )
 }
-

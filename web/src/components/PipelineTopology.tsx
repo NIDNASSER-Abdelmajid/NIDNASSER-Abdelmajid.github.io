@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { BarChart3, ChevronRight, Database, Layers, Terminal, Workflow } from 'lucide-react'
-import { PIPELINE_STAGES, type PipelineStage } from '../data/portfolio'
+import { PIPELINE_STAGES } from '../data/portfolio'
+import type { PipelineStage } from '../types/portfolio'
 
 const STAGE_ICONS: Record<PipelineStage['id'], typeof Database> = {
   sources: Database,
