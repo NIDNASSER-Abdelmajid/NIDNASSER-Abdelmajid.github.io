@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Database, Layers, Radio, ShieldCheck, Terminal } from 'lucide-react'
+import { ArrowRight, Database, Layers, Radio, Server, Terminal } from 'lucide-react'
 import { STACK_MATRIX } from '../data/portfolio'
 import type { StackRow } from '../types/portfolio'
 
@@ -7,79 +7,55 @@ type StackFilter = 'all' | StackRow['layer']
 
 const QUERY_TABS: { id: StackFilter; sql: string; label: string }[] = [
   { id: 'all', sql: 'SELECT * FROM stack;', label: 'All Layers' },
-  {
-    id: 'lakehouse',
-    sql: "SELECT * FROM stack WHERE layer = 'lakehouse';",
-    label: 'Lakehouse & Compute',
-  },
-  {
-    id: 'pipelines',
-    sql: "SELECT * FROM stack WHERE layer = 'pipelines';",
-    label: 'Orchestration & Stream',
-  },
-  {
-    id: 'storage',
-    sql: "SELECT * FROM stack WHERE layer = 'storage';",
-    label: 'Databases & Modeling',
-  },
-  {
-    id: 'bi_ml',
-    sql: "SELECT * FROM stack WHERE layer = 'bi_ml';",
-    label: 'BI & Serving',
-  },
+  { id: 'lakehouse', sql: "SELECT * FROM stack WHERE layer = 'lakehouse';", label: 'Lakehouse' },
+  { id: 'pipelines', sql: "SELECT * FROM stack WHERE layer = 'pipelines';", label: 'Streaming & Ops' },
+  { id: 'storage', sql: "SELECT * FROM stack WHERE layer = 'storage';", label: 'Storage' },
+  { id: 'bi_ml', sql: "SELECT * FROM stack WHERE layer = 'bi_ml';", label: 'BI & Serving' },
 ]
 
-const CAPABILITY_PILLARS = [
-  {
-    icon: Layers,
-    title: 'Lakehouse & Medallion Design',
-    detail: 'Incremental CDC merges, schema enforcement, and Bronze/Silver/Gold isolation in Databricks and Spark.',
-  },
-  {
-    icon: Radio,
-    title: 'Batch & Event Streaming',
-    detail: 'Airflow DAG orchestration, Kafka partitioned topics, dead-letter handling, and idempotent retries.',
-  },
-  {
-    icon: Database,
-    title: 'Dimensional Warehousing',
-    detail: 'Star and Snowflake schemas, conformed client crosswalks, query tuning, and analytical SQL.',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Data Quality & Observability',
-    detail: 'Row-count drift guards, primary key checks, GL reconciliation assertions, and hash deduplication.',
-  },
+const LAYER_ORDER: { id: StackRow['layer']; title: string; icon: typeof Layers }[] = [
+  { id: 'lakehouse', title: 'Lakehouse & Compute', icon: Layers },
+  { id: 'pipelines', title: 'Orchestration & Streaming', icon: Radio },
+  { id: 'storage', title: 'Storage & Modeling', icon: Database },
+  { id: 'bi_ml', title: 'BI & Serving', icon: Server },
 ]
 
-export function StackPage() {
+interface StackPageProps {
+  onNavigate: (path: string) => void
+}
+
+export function StackPage({ onNavigate }: StackPageProps) {
   const [activeLayer, setActiveLayer] = useState<StackFilter>('all')
   const currentTab = QUERY_TABS.find((t) => t.id === activeLayer) ?? QUERY_TABS[0]
 
-  const rows =
+  const visibleLayers =
     activeLayer === 'all'
-      ? STACK_MATRIX
-      : STACK_MATRIX.filter((row) => row.layer === activeLayer)
+      ? LAYER_ORDER
+      : LAYER_ORDER.filter((layer) => layer.id === activeLayer)
+
+  const totalCount =
+    activeLayer === 'all'
+      ? STACK_MATRIX.length
+      : STACK_MATRIX.filter((r) => r.layer === activeLayer).length
 
   return (
-    <section className="py-12 sm:py-16">
+    <section className="py-16 sm:py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mb-8 flex flex-col justify-between gap-6 border-b border-neutral-200 pb-8 lg:flex-row lg:items-end dark:border-neutral-800">
           <div>
             <div className="mb-2 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
               <Layers className="h-3.5 w-3.5" strokeWidth={1.8} />
-              <span>03 // Query My Stack</span>
+              <span>03 // Capability Matrix</span>
             </div>
             <h1 className="text-3xl font-semibold tracking-tight text-neutral-950 sm:text-4xl dark:text-neutral-50">
-              Engineering Specification
+              Tech Stack
             </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
-              Core languages, distributed compute engines, storage layers, and analytics tools
-              organized by pipeline responsibility.
+            <p className="mt-2 text-sm sm:text-base text-neutral-600 dark:text-neutral-400">
+              Core tools organized by architectural layer.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2">
             {QUERY_TABS.map((tab) => {
               const active = activeLayer === tab.id
               return (
@@ -87,10 +63,10 @@ export function StackPage() {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveLayer(tab.id)}
-                  className={`rounded border px-2.5 py-1.5 font-mono text-[11px] transition-colors ${
+                  className={`rounded-md px-3 py-1.5 font-mono text-xs transition-colors ${
                     active
-                      ? 'border-neutral-950 bg-neutral-950 text-neutral-50 dark:border-neutral-50 dark:bg-neutral-50 dark:text-neutral-950'
-                      : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-400 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-600'
+                      ? 'bg-neutral-950 text-neutral-50 dark:bg-neutral-50 dark:text-neutral-950'
+                      : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800'
                   }`}
                 >
                   {tab.label}
@@ -100,70 +76,58 @@ export function StackPage() {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900/50">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-200 bg-neutral-50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-950">
-            <div className="flex items-center gap-2 font-mono text-xs text-neutral-900 dark:text-neutral-100">
-              <Terminal className="h-3.5 w-3.5 text-neutral-500" strokeWidth={1.8} />
-              <span className="break-all">{currentTab.sql}</span>
-            </div>
-            <span className="font-mono text-[11px] text-neutral-500 dark:text-neutral-400">
-              {rows.length} rows returned
-            </span>
+        {/* Clean SQL Prompt Bar */}
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-neutral-100/80 px-4 py-3 dark:bg-neutral-900">
+          <div className="flex items-center gap-2 font-mono text-xs sm:text-sm text-neutral-900 dark:text-neutral-100">
+            <Terminal className="h-4 w-4 text-neutral-500" strokeWidth={1.8} />
+            <span className="break-all">{currentTab.sql}</span>
           </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="border-b border-neutral-200 font-mono text-[10px] uppercase tracking-wider text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
-                  <th className="px-4 py-3 font-medium">Layer</th>
-                  <th className="px-4 py-3 font-medium">Technology</th>
-                  <th className="px-4 py-3 font-medium">Pipeline Responsibility</th>
-                  <th className="px-4 py-3 font-medium">Workload</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-200 text-xs dark:divide-neutral-800">
-                {rows.map((row) => (
-                  <tr
-                    key={row.technology}
-                    className="transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-900"
-                  >
-                    <td className="whitespace-nowrap px-4 py-3.5 font-mono text-[11px] text-neutral-500 dark:text-neutral-400">
-                      {row.layerLabel}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3.5 font-semibold text-neutral-950 dark:text-neutral-50">
-                      {row.technology}
-                    </td>
-                    <td className="min-w-[260px] px-4 py-3.5 text-neutral-600 dark:text-neutral-300">
-                      {row.role}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3.5">
-                      <span className="rounded border border-neutral-200 bg-neutral-50 px-2 py-0.5 font-mono text-[10px] text-neutral-700 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-300">
-                        {row.workload}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <span className="font-mono text-xs text-neutral-500 dark:text-neutral-400">
+            {totalCount} tools
+          </span>
         </div>
 
-        {/* Core Data Engineering Capabilities */}
-        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {CAPABILITY_PILLARS.map((pillar) => {
-            const Icon = pillar.icon
+        {/* 4-Layer Visual Shelves */}
+        <div className="space-y-8">
+          {visibleLayers.map((layerMeta) => {
+            const Icon = layerMeta.icon
+            const items = STACK_MATRIX.filter((item) => item.layer === layerMeta.id)
+
             return (
-              <div
-                key={pillar.title}
-                className="rounded-lg border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900/50"
-              >
-                <Icon className="h-4 w-4 text-neutral-700 dark:text-neutral-300" strokeWidth={1.8} />
-                <h2 className="mt-3 text-sm font-semibold text-neutral-950 dark:text-neutral-50">
-                  {pillar.title}
-                </h2>
-                <p className="mt-2 text-xs leading-relaxed text-neutral-600 dark:text-neutral-400">
-                  {pillar.detail}
-                </p>
+              <div key={layerMeta.id}>
+                <div className="mb-4 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
+                  <Icon className="h-3.5 w-3.5" strokeWidth={1.8} />
+                  <span>{layerMeta.title}</span>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  {items.map((item) => (
+                    <button
+                      key={item.technology}
+                      type="button"
+                      onClick={() => onNavigate('/projects')}
+                      className="group flex flex-col justify-between rounded-xl border border-neutral-200 bg-white p-5 text-left transition-colors hover:border-neutral-950 dark:border-neutral-800 dark:bg-neutral-900/50 dark:hover:border-neutral-400"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="rounded bg-neutral-100 px-2 py-0.5 font-mono text-xs text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">
+                            {item.workload}
+                          </span>
+                          <ArrowRight
+                            className="h-3.5 w-3.5 text-neutral-400 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100"
+                            strokeWidth={1.8}
+                          />
+                        </div>
+                        <div className="mt-3 text-base font-semibold text-neutral-950 dark:text-neutral-50">
+                          {item.technology}
+                        </div>
+                      </div>
+                      <div className="mt-2 font-mono text-xs text-neutral-600 dark:text-neutral-400">
+                        {item.pattern}
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             )
           })}

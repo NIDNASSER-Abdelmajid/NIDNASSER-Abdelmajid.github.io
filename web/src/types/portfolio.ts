@@ -19,19 +19,38 @@ export interface ProjectArchitectureNode {
   detail: string
 }
 
+export interface ProjectSchemaColumn {
+  name: string
+  type: string
+  keyFlag?: 'PK' | 'FK' | 'CLUSTER'
+}
+
 export interface ProjectTableSchema {
   tableName: string
   layer: 'Source' | 'Bronze' | 'Silver' | 'Gold' | 'Stream' | 'Serving'
   primaryKey: string
   partitionOrCluster: string
   updateMode: string
-  columns: { name: string; type: string; note: string }[]
+  columns: ProjectSchemaColumn[]
+}
+
+export interface ProjectSchemaRelation {
+  fromTable: string
+  fromColumn: string
+  toTable: string
+  toColumn: string
+  cardinality: string
 }
 
 export interface ProjectQualityGate {
-  rule: string
-  layer: string
+  boundary: string
+  contract: string
   enforcement: string
+}
+
+export interface ProjectDecision {
+  choice: string
+  rationale: string
 }
 
 export interface ProjectItem {
@@ -53,13 +72,14 @@ export interface ProjectItem {
   repoUrl?: string
   architecture: ProjectArchitectureNode[]
   schemas: ProjectTableSchema[]
+  relations: ProjectSchemaRelation[]
   qualityGates: ProjectQualityGate[]
   codeSnippet: {
     filename: string
     language: string
     content: string
   }
-  tradeoffs: string[]
+  decisions: ProjectDecision[]
 }
 
 export interface ExperienceItem {
@@ -94,7 +114,7 @@ export interface StackRow {
   layer: 'lakehouse' | 'pipelines' | 'storage' | 'bi_ml'
   layerLabel: string
   technology: string
-  role: string
+  pattern: string
   workload: string
 }
 
@@ -117,6 +137,5 @@ export interface BlogPost {
   readTime: string
   excerpt: string
   tags: string[]
-  takeaways: string[]
   sections: BlogSection[]
 }

@@ -47,7 +47,7 @@ export function App() {
       case 'experience':
         return <ExperiencePage />
       case 'stack':
-        return <StackPage />
+        return <StackPage onNavigate={navigate} />
       case 'blog':
         return <BlogPage activeSlug={route.slug} onNavigate={navigate} />
       case 'contact':

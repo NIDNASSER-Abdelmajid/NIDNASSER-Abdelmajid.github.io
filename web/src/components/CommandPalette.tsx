@@ -291,7 +291,7 @@ export function CommandPalette({
                     <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.8} />
                     <span className="truncate font-medium">{item.label}</span>
                   </div>
-                  <div className="ml-3 flex shrink-0 items-center gap-2 font-mono text-[10px] opacity-70">
+                  <div className="ml-3 flex shrink-0 items-center gap-2 font-mono text-xs opacity-70">
                     <span>{item.group}</span>
                     {item.hint && <span>· {item.hint}</span>}
                   </div>
@@ -301,7 +301,7 @@ export function CommandPalette({
           )}
         </div>
 
-        <div className="flex items-center justify-between border-t border-neutral-200 px-4 py-2 font-mono text-[10px] text-neutral-500 dark:border-neutral-800">
+        <div className="flex items-center justify-between border-t border-neutral-200 px-4 py-2.5 font-mono text-xs text-neutral-500 dark:border-neutral-800">
           <span>Arrows to navigate · Enter to execute</span>
           <span>ESC to close</span>
         </div>

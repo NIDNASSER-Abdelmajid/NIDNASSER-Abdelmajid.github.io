@@ -14,9 +14,9 @@ export function ExperiencePage() {
   const showCredentials = filter === 'All' || filter === 'Credentials'
 
   return (
-    <section className="py-12 sm:py-16">
+    <section className="py-16 sm:py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
           <div className="lg:col-span-4">
             <div className="lg:sticky lg:top-24">
               <div className="mb-2 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
@@ -24,14 +24,13 @@ export function ExperiencePage() {
                 <span>02 // Execution Log</span>
               </div>
               <h1 className="text-3xl font-semibold tracking-tight text-neutral-950 sm:text-4xl dark:text-neutral-50">
-                Experience &amp; Training
+                Experience
               </h1>
-              <p className="mt-3 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
-                Engineering roles spanning enterprise financial warehouses, high-scale web
-                telemetry pipelines, startup data platforms, and formal CS engineering at INPT.
+              <p className="mt-3 text-sm sm:text-base leading-relaxed text-neutral-600 dark:text-neutral-400">
+                Data engineering across enterprise warehouses, web pipelines, and INPT.
               </p>
 
-              <div className="mt-6 flex flex-wrap gap-1.5">
+              <div className="mt-6 flex flex-wrap gap-2">
                 {FILTERS.map((item) => {
                   const active = filter === item
                   return (
@@ -39,10 +38,10 @@ export function ExperiencePage() {
                       key={item}
                       type="button"
                       onClick={() => setFilter(item)}
-                      className={`rounded border px-2.5 py-1 font-mono text-[11px] transition-colors ${
+                      className={`rounded-md px-3 py-1.5 font-mono text-xs transition-colors ${
                         active
-                          ? 'border-neutral-950 bg-neutral-950 text-neutral-50 dark:border-neutral-50 dark:bg-neutral-50 dark:text-neutral-950'
-                          : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-400 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-600'
+                          ? 'bg-neutral-950 text-neutral-50 dark:bg-neutral-50 dark:text-neutral-950'
+                          : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800'
                       }`}
                     >
                       {item}
@@ -53,23 +52,20 @@ export function ExperiencePage() {
             </div>
           </div>
 
-          <div className="space-y-10 lg:col-span-8">
+          <div className="space-y-12 lg:col-span-8">
             {showExperience && (
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 border-b border-neutral-200 pb-2 font-mono text-xs uppercase tracking-wider text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+              <div>
+                <div className="mb-4 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
                   <Briefcase className="h-3.5 w-3.5" strokeWidth={1.8} />
-                  <span>Industry, Research &amp; Engineering Roles</span>
+                  <span>Roles</span>
                 </div>
 
-                <div className="space-y-4">
+                <div className="divide-y divide-neutral-200 rounded-xl border border-neutral-200 bg-white dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-900/50">
                   {EXPERIENCES.map((exp) => (
-                    <div
-                      key={exp.id}
-                      className="rounded-lg border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900/50"
-                    >
+                    <div key={exp.id} className="p-6">
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div>
-                          <h2 className="text-base font-semibold text-neutral-950 dark:text-neutral-50">
+                          <h2 className="text-base sm:text-lg font-semibold text-neutral-950 dark:text-neutral-50">
                             {exp.role}
                           </h2>
                           <div className="mt-0.5 text-sm text-neutral-700 dark:text-neutral-300">
@@ -77,7 +73,7 @@ export function ExperiencePage() {
                           </div>
                         </div>
 
-                        <div className="text-right font-mono text-[11px] text-neutral-500 dark:text-neutral-400">
+                        <div className="text-left font-mono text-xs text-neutral-500 sm:text-right dark:text-neutral-400">
                           <div>{exp.period}</div>
                           <div className="mt-0.5 inline-flex items-center gap-1">
                             <MapPin className="h-3 w-3" strokeWidth={1.8} />
@@ -86,13 +82,13 @@ export function ExperiencePage() {
                         </div>
                       </div>
 
-                      <ul className="mt-3.5 space-y-1.5">
+                      <ul className="mt-4 space-y-2">
                         {exp.highlights.map((bullet) => (
                           <li
                             key={bullet}
-                            className="flex items-start gap-2.5 text-xs leading-relaxed text-neutral-600 dark:text-neutral-400"
+                            className="flex items-start gap-2.5 text-sm leading-relaxed text-neutral-600 dark:text-neutral-300"
                           >
-                            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-neutral-400 dark:bg-neutral-500" />
+                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-400 dark:bg-neutral-500" />
                             <span>{bullet}</span>
                           </li>
                         ))}
@@ -102,7 +98,7 @@ export function ExperiencePage() {
                         {exp.stack.map((tech) => (
                           <span
                             key={tech}
-                            className="rounded border border-neutral-200 bg-neutral-50 px-2 py-0.5 font-mono text-[10px] text-neutral-700 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-300"
+                            className="rounded bg-neutral-100 px-2.5 py-1 font-mono text-xs text-neutral-700 dark:bg-neutral-800/80 dark:text-neutral-300"
                           >
                             {tech}
                           </span>
@@ -115,18 +111,15 @@ export function ExperiencePage() {
             )}
 
             {showEducation && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-neutral-200 pb-2 font-mono text-xs uppercase tracking-wider text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+              <div>
+                <div className="mb-4 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
                   <GraduationCap className="h-3.5 w-3.5" strokeWidth={1.8} />
                   <span>Education</span>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4">
+                <div className="divide-y divide-neutral-200 rounded-xl border border-neutral-200 bg-white dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-900/50">
                   {EDUCATION.map((edu) => (
-                    <div
-                      key={edu.id}
-                      className="rounded-lg border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900/50"
-                    >
+                    <div key={edu.id} className="p-6">
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div>
                           <h2 className="text-base font-semibold text-neutral-950 dark:text-neutral-50">
@@ -136,7 +129,7 @@ export function ExperiencePage() {
                             {edu.institution}
                           </div>
                         </div>
-                        <div className="text-right font-mono text-[11px] text-neutral-500 dark:text-neutral-400">
+                        <div className="text-left font-mono text-xs text-neutral-500 sm:text-right dark:text-neutral-400">
                           <div>{edu.period}</div>
                           <div className="mt-0.5">{edu.location}</div>
                         </div>
@@ -145,9 +138,9 @@ export function ExperiencePage() {
                         {edu.details.map((line) => (
                           <li
                             key={line}
-                            className="flex items-start gap-2.5 text-xs leading-relaxed text-neutral-600 dark:text-neutral-400"
+                            className="flex items-start gap-2.5 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400"
                           >
-                            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-neutral-400 dark:bg-neutral-500" />
+                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-400 dark:bg-neutral-500" />
                             <span>{line}</span>
                           </li>
                         ))}
@@ -159,30 +152,27 @@ export function ExperiencePage() {
             )}
 
             {showCredentials && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-neutral-200 pb-2 font-mono text-xs uppercase tracking-wider text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+              <div>
+                <div className="mb-4 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
                   <Award className="h-3.5 w-3.5" strokeWidth={1.8} />
-                  <span>Certifications &amp; Recognition</span>
+                  <span>Certifications &amp; Honors</span>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="divide-y divide-neutral-200 rounded-xl border border-neutral-200 bg-white dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-900/50">
                   {CREDENTIALS.map((cred) => (
                     <div
                       key={cred.id}
-                      className="flex items-start justify-between gap-3 rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900/50"
+                      className="flex flex-wrap items-center justify-between gap-3 px-6 py-4"
                     >
                       <div>
-                        <div className="font-mono text-[10px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                          {cred.category}
-                        </div>
-                        <div className="mt-1 text-sm font-medium text-neutral-950 dark:text-neutral-50">
+                        <div className="text-sm font-medium text-neutral-950 dark:text-neutral-50">
                           {cred.title}
                         </div>
                         <div className="mt-0.5 text-xs text-neutral-600 dark:text-neutral-400">
-                          {cred.issuer}
+                          {cred.issuer} · {cred.category}
                         </div>
                       </div>
-                      <span className="shrink-0 rounded border border-neutral-200 bg-neutral-50 px-2 py-0.5 font-mono text-[11px] text-neutral-700 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-300">
+                      <span className="font-mono text-xs text-neutral-500 dark:text-neutral-400">
                         {cred.year}
                       </span>
                     </div>

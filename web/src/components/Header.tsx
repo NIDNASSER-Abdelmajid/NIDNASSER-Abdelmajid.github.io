@@ -41,7 +41,7 @@ export function Header({
           onClick={() => onNavigate('/')}
           className="group flex items-center gap-2.5 text-sm font-semibold tracking-tight text-neutral-950 dark:text-neutral-50"
         >
-          <span className="flex h-7 w-7 items-center justify-center rounded border border-neutral-300 bg-neutral-950 font-mono text-[11px] font-semibold text-neutral-50 transition-transform group-hover:scale-105 dark:border-neutral-700 dark:bg-neutral-50 dark:text-neutral-950">
+          <span className="flex h-7 w-7 items-center justify-center rounded border border-neutral-300 bg-neutral-950 font-mono text-xs font-semibold text-neutral-50 transition-transform group-hover:scale-105 dark:border-neutral-700 dark:bg-neutral-50 dark:text-neutral-950">
             AN
           </span>
           <span className="font-mono text-xs uppercase tracking-widest text-neutral-700 dark:text-neutral-300">
@@ -75,7 +75,7 @@ export function Header({
             type="button"
             onClick={onOpenPalette}
             aria-label="Open command palette"
-            className="hidden items-center gap-1.5 rounded border border-neutral-200 bg-white px-2.5 py-1.5 font-mono text-[11px] text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-950 sm:inline-flex dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-600 dark:hover:text-neutral-50"
+            className="hidden items-center gap-1.5 rounded border border-neutral-200 bg-white px-2.5 py-1.5 font-mono text-xs text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-950 sm:inline-flex dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-600 dark:hover:text-neutral-50"
           >
             <Command className="h-3 w-3" strokeWidth={1.8} />
             <span>K</span>
@@ -87,7 +87,7 @@ export function Header({
               onClick={onResetSystem}
               title="Follow system theme preference"
               aria-label="Follow system theme preference"
-              className="hidden items-center gap-1 rounded border border-neutral-200 bg-white px-2 py-1.5 font-mono text-[10px] uppercase tracking-wider text-neutral-500 transition-colors hover:border-neutral-400 hover:text-neutral-950 sm:inline-flex dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-600 dark:hover:text-neutral-50"
+              className="hidden items-center gap-1 rounded border border-neutral-200 bg-white px-2.5 py-1.5 font-mono text-xs uppercase tracking-wider text-neutral-500 transition-colors hover:border-neutral-400 hover:text-neutral-950 sm:inline-flex dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-600 dark:hover:text-neutral-50"
             >
               <Monitor className="h-3 w-3" strokeWidth={1.8} />
               <span>Sys</span>
