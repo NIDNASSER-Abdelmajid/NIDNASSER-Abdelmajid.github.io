@@ -36,3 +36,4 @@ export function LinkedInIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
+
