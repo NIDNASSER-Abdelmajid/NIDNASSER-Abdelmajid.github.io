@@ -82,7 +82,7 @@ export function App() {
       <div className="flex min-h-[calc(100vh-3.5rem)] min-w-0 flex-1 flex-col md:min-h-screen">
         <main className="@container flex-1">{renderPage()}</main>
 
-        <Footer onNavigate={navigate} />
+        <Footer />
       </div>
 
       <CommandPalette
