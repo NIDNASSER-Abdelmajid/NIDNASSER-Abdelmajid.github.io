@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import {
+  Award,
   BookOpen,
   Briefcase,
   Command,
@@ -40,9 +41,10 @@ const NAV_ITEMS: {
   { path: '/', page: 'home', code: '00', label: 'Overview', icon: Terminal },
   { path: '/projects', page: 'projects', code: '01', label: 'Projects', icon: Database },
   { path: '/experience', page: 'experience', code: '02', label: 'Experience', icon: Briefcase },
-  { path: '/stack', page: 'stack', code: '03', label: 'Stack', icon: Layers },
-  { path: '/blog', page: 'blog', code: '04', label: 'Blog', icon: BookOpen },
-  { path: '/contact', page: 'contact', code: '05', label: 'Contact', icon: Mail },
+  { path: '/credentials', page: 'credentials', code: '03', label: 'Credentials', icon: Award },
+  { path: '/stack', page: 'stack', code: '04', label: 'Stack', icon: Layers },
+  { path: '/blog', page: 'blog', code: '05', label: 'Blog', icon: BookOpen },
+  { path: '/contact', page: 'contact', code: '06', label: 'Contact', icon: Mail },
 ]
 
 export function Sidebar({

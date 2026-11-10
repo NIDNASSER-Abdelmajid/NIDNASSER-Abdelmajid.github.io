@@ -1,8 +1,8 @@
 import type {
+  ArchitectureBlueprint,
   CredentialItem,
   EducationItem,
   ExperienceItem,
-  PipelineStage,
   ProjectItem,
   StackRow,
 } from '../types/portfolio'
@@ -13,17 +13,17 @@ export const PROFILE = {
   monogram: 'AN // DE',
   role: 'Data Engineer',
   location: 'Rabat, Morocco',
-  availability: 'Available for Data Engineering Roles',
+  availability: 'Open to Data Engineering Roles',
   email: 'abdelmajidnidnasser1@gmail.com',
   // To add your photo: save it in web/public/profile.jpg and set photoUrl: '/profile.jpg'
   photoUrl: '',
-  headline: 'Building resilient lakehouses, streaming topologies, and distributed data pipelines.',
+  headline: 'Designing reliable data pipelines across batch, streaming, and analytical systems.',
   summary:
-    'Turning fragmented databases, event streams, and web telemetry into reliable analytical platforms with Python, SQL, Databricks, Spark, Airflow, and Kafka.',
+    'From raw operational feeds, APIs, and distributed web crawlers to structured warehouses, analytics marts, and ML services.',
   metrics: [
     { value: '100K+', label: 'Domains Crawled' },
     { value: '45+', label: 'Systems Shipped' },
-    { value: '3-Tier', label: 'Medallion Lakehouse' },
+    { value: 'Batch · Stream', label: 'End-to-End Scope' },
   ],
   links: {
     github: 'https://github.com/NIDNASSER-Abdelmajid',
@@ -32,46 +32,210 @@ export const PROFILE = {
   },
 }
 
-export const PIPELINE_STAGES: PipelineStage[] = [
+export const ARCHITECTURE_BLUEPRINTS: ArchitectureBlueprint[] = [
   {
-    id: 'sources',
-    step: '01',
-    label: 'SOURCES',
-    subtitle: 'OLTP · APIs · Crawlers',
-    engines: ['PostgreSQL', 'REST APIs', 'Scrapy', 'Cloud Blob'],
-    pattern: 'Incremental CDC & Distributed Crawl',
-    contract: 'raw_events / cdc_batches',
-    snippet: `SELECT txn_id, account_id, amount, txn_timestamp\nFROM alphapay.transactions\nWHERE created_at > :last_watermark;`,
+    id: 'batch',
+    label: 'Batch & Warehousing',
+    shortLabel: 'Batch ETL',
+    headline: 'Incremental extraction, deterministic merges, and dimensional marts across heterogeneous ERPs and OLTP sources.',
+    inputs: ['OLTP DBs', 'ERP APIs', 'Cloud Blob'],
+    guardLabel: 'Schema + Quarantine',
+    outputs: ['Warehouse', 'BI Marts', 'Audit Log'],
+    stages: [
+      {
+        id: 'extract',
+        step: '01',
+        role: 'Capture',
+        label: 'Watermarked Extract',
+        tools: ['Python', 'SQL', 'Airflow', 'REST Connectors'],
+        guarantee: 'Resumable watermarks & zero silent drops',
+        description:
+          'Pulls incremental slices from PostgreSQL, SQL Server, Salesforce, or SAP without overloading source transactions.',
+      },
+      {
+        id: 'land',
+        step: '02',
+        role: 'Staging',
+        label: 'Immutable Landing',
+        tools: ['Parquet', 'Delta Lake', 'Cloud Storage'],
+        guarantee: 'Append-only replayability per batch',
+        description:
+          'Preserves raw source snapshots stamped with batch metadata so downstream transforms can replay any window cleanly.',
+      },
+      {
+        id: 'shape',
+        step: '03',
+        role: 'Transform',
+        label: 'Conformed Modeling',
+        tools: ['Apache Spark', 'Databricks', 'SQL', 'Pandas'],
+        guarantee: 'Idempotent upserts & FK integrity',
+        description:
+          'Deduplicates records, resolves entity crosswalks, and enforces automated reconciliation assertions before promotion.',
+      },
+      {
+        id: 'serve',
+        step: '04',
+        role: 'Consume',
+        label: 'Semantic & BI Marts',
+        tools: ['Power BI', 'Tableau', 'Looker', 'SQL Views'],
+        guarantee: 'Consistent KPI definitions across teams',
+        description:
+          'Exposes star-schema facts and dimensions tuned for fast executive dashboards and self-service SQL exploration.',
+      },
+    ],
   },
   {
-    id: 'ingest',
-    step: '02',
-    label: 'INGEST',
-    subtitle: 'Kafka · Airflow · ETL',
-    engines: ['Apache Kafka', 'Apache Airflow', 'Python', 'Docker'],
-    pattern: 'Orchestrated Batch & Event Stream',
-    contract: 'validated_topic / dag_run',
-    snippet: `dag_id: "ingest_operational_cdc"\nschedule: "*/15 * * * *"\nretries: 3\nidempotent_merge: true`,
+    id: 'streaming',
+    label: 'Real-Time Streaming',
+    shortLabel: 'Streaming',
+    headline: 'Partitioned event logs with schema validation, dead-letter routing, and low-latency state projections.',
+    inputs: ['Telemetry', 'Webhooks', 'App Events'],
+    guardLabel: 'Dead-Letter Queue',
+    outputs: ['Live UI', 'Event Store', 'Alerts'],
+    stages: [
+      {
+        id: 'produce',
+        step: '01',
+        role: 'Emit',
+        label: 'Keyed Event Producers',
+        tools: ['Python', 'Java', 'REST / WebSockets'],
+        guarantee: 'Per-entity ordering via partition keys',
+        description:
+          'Publishes structured events partitioned by entity identifier so causal sequences stay intact across worker nodes.',
+      },
+      {
+        id: 'broker',
+        step: '02',
+        role: 'Transport',
+        label: 'Durable Commit Log',
+        tools: ['Apache Kafka', 'Docker', 'Topics'],
+        guarantee: 'Configurable retention & consumer replay',
+        description:
+          'Buffers traffic spikes cleanly and decouples event producers from independent downstream consumer groups.',
+      },
+      {
+        id: 'process',
+        step: '03',
+        role: 'Process',
+        label: 'Stateful Workers',
+        tools: ['Consumer Groups', 'Schema Validation', 'DLQ'],
+        guarantee: 'Manual offset commits post-write',
+        description:
+          'Routes malformed payloads to dead-letter topics while advancing consumer offsets only after sink durability succeeds.',
+      },
+      {
+        id: 'project',
+        step: '04',
+        role: 'Serve',
+        label: 'Live State & Alerts',
+        tools: ['FastAPI', 'Read Stores', 'Sockets'],
+        guarantee: 'Idempotent state materialization',
+        description:
+          'Updates real-time projections and live monitoring surfaces without blocking upstream event throughput.',
+      },
+    ],
   },
   {
-    id: 'lakehouse',
-    step: '03',
-    label: 'MEDALLION',
-    subtitle: 'Databricks · Spark · Delta',
-    engines: ['Databricks', 'Apache Spark', 'PySpark', 'Delta Lake'],
-    pattern: 'Bronze -> Silver -> Gold Refinement',
-    contract: 'gold.fct_transactions_daily',
-    snippet: `MERGE INTO silver.transactions t\nUSING staging_cdc s ON t.txn_id = s.txn_id\nWHEN MATCHED THEN UPDATE SET *\nWHEN NOT MATCHED THEN INSERT *;`,
+    id: 'extraction',
+    label: 'Crawling & Unstructured',
+    shortLabel: 'Extraction',
+    headline: 'Fault-tolerant web acquisition separated from deduplication, OCR, and structured enrichment.',
+    inputs: ['Web DOM', 'HAR Logs', 'Assets'],
+    guardLabel: 'Rate & Drift Guard',
+    outputs: ['Parquet', 'Search', 'APIs'],
+    stages: [
+      {
+        id: 'crawl',
+        step: '01',
+        role: 'Acquire',
+        label: 'Distributed Crawlers',
+        tools: ['Scrapy', 'Selenium', 'Headless Workers'],
+        guarantee: 'Exponential backoff & shard isolation',
+        description:
+          'Captures dynamic DOM snapshots, request headers, and pagination state across large domain cohorts reliably.',
+      },
+      {
+        id: 'checkpoint',
+        step: '02',
+        role: 'Buffer',
+        label: 'Staged Raw Checkpoints',
+        tools: ['Parquet', 'JSONL', 'Linux / Cron'],
+        guarantee: 'Zero tight coupling to compute jobs',
+        description:
+          'Flushes captured payloads immediately to disk checkpoints so network retries never stall CPU-heavy enrichment stages.',
+      },
+      {
+        id: 'enrich',
+        step: '03',
+        role: 'Enrich',
+        label: 'Hash Dedupe & OCR',
+        tools: ['Apache Spark', 'Python', 'OCR / NLP'],
+        guarantee: 'Asset hashing cuts redundant compute',
+        description:
+          'Hashes repeating media before OCR and classifies unstructured text into hierarchical analytical taxonomies.',
+      },
+      {
+        id: 'publish',
+        step: '04',
+        role: 'Deliver',
+        label: 'Typed Analytical Feeds',
+        tools: ['PostgreSQL', 'Parquet', 'REST APIs'],
+        guarantee: 'Row-count & drift checks pre-load',
+        description:
+          'Loads validated historical snapshots with batched upserts into queryable SQL tables and client endpoints.',
+      },
+    ],
   },
   {
-    id: 'serve',
-    step: '04',
-    label: 'SERVE',
-    subtitle: 'Warehouse · BI · ML',
-    engines: ['SQL Server', 'Power BI', 'Tableau', 'FastAPI'],
-    pattern: 'Star Schema Marts & Inference APIs',
-    contract: 'kpi_semantic_layer',
-    snippet: `SELECT region, SUM(volume_mad) AS gmv,\n  AVG(latency_ms) AS gateway_p50\nFROM gold.mart_payment_gateways\nGROUP BY region;`,
+    id: 'analytics',
+    label: 'Analytics & ML Serving',
+    shortLabel: 'BI & ML',
+    headline: 'Reproducible feature engineering and governed KPI layers bridging analytical warehouses to operational APIs.',
+    inputs: ['Clean Facts', 'Free Text', 'APIs'],
+    guardLabel: 'PII & Drift Guard',
+    outputs: ['Scoring API', 'BI Suite', 'Audit Trail'],
+    stages: [
+      {
+        id: 'features',
+        step: '01',
+        role: 'Assemble',
+        label: 'Feature & Metric Layer',
+        tools: ['SQL', 'Python', 'Pandas'],
+        guarantee: 'PII stripping before model exports',
+        description:
+          'Combines behavioral history with normalized attributes into deterministic datasets free of training-serving skew.',
+      },
+      {
+        id: 'train',
+        step: '02',
+        role: 'Model',
+        label: 'NLP & Tabular Scoring',
+        tools: ['Scikit-learn', 'XGBoost', 'NLP Pipelines'],
+        guarantee: 'Tracked artifact & model versioning',
+        description:
+          'Trains and evaluates classification or prioritization models directly on curated institutional and behavioral inputs.',
+      },
+      {
+        id: 'api',
+        step: '03',
+        role: 'Expose',
+        label: 'Operational Serving',
+        tools: ['FastAPI', 'Docker', 'PostgreSQL'],
+        guarantee: 'Append-only prediction audit trail',
+        description:
+          'Exposes real-time inference and triage endpoints while writing every versioned verdict back to warehouse storage.',
+      },
+      {
+        id: 'bi',
+        step: '04',
+        role: 'Decision',
+        label: 'Executive Telemetry',
+        tools: ['Power BI', 'Tableau', 'Looker'],
+        guarantee: 'Single reconciled metric taxonomy',
+        description:
+          'Pairs model outputs with historical cohort KPIs so stakeholders track both outcomes and operational latency.',
+      },
+    ],
   },
 ]
 
@@ -79,158 +243,65 @@ export const PROJECTS: ProjectItem[] = [
   {
     id: 'alphapay-lakehouse',
     code: 'PRJ-01',
-    title: 'AlphaPay Financial Lakehouse',
+    title: 'Financial Payment Lakehouse',
     category: 'Lakehouse & ETL',
     year: '2025',
     context: 'Databricks Medallion (Temp Showcase)',
     summary:
-      'Metadata-driven Databricks lakehouse unifying PostgreSQL OLTP banking schemas and payment gateway logs into Delta marts.',
-    ingestionMode: 'Historical Seed + CDC',
-    computeEngine: 'Databricks / PySpark',
-    orchestration: 'Config-Driven Jobs',
-    storageSink: 'Delta Lake (Unity Catalog)',
-    grain: '1 row / transaction',
-    sla: '< 15 min micro-batch',
+      'Metadata-driven Databricks pipeline unifying operational banking databases and payment gateway logs into governed analytical layers.',
+    articleSlug: 'idempotent-cdc-medallion-lakehouse',
+    // To attach screenshots later: place files in web/public/projects/ and uncomment:
+    // images: [{ src: '/projects/alphapay-1.png', alt: '...', title: '...', context: '...' }],
+    wiki: {
+      problem:
+        'Payment telemetry across card networks, cash agencies, and credit bureau feeds arrived on different schedules and formats, causing duplicate records and brittle manual reconciliation.',
+      solution:
+        'Designed a config-driven three-stage lakehouse pipeline that separates immutable raw ingestion from cleaned, deduplicated core tables and self-service risk marts.',
+      workflow: [
+        {
+          step: '01',
+          title: 'Metadata-Driven Source Pull',
+          summary:
+            'Reads source schedules and watermark tracking configs so onboarding a new banking feed takes a configuration entry rather than duplicating jobs.',
+          tools: ['PostgreSQL', 'Cloud CSV', 'Config Metadata'],
+        },
+        {
+          step: '02',
+          title: 'Append-Only Raw Landing',
+          summary:
+            'Stores every incoming transaction and gateway settlement untouched with batch stamps so broken downstream transforms can safely replay.',
+          tools: ['Delta Lake', 'Databricks'],
+        },
+        {
+          step: '03',
+          title: 'Standardization & Deduplication',
+          summary:
+            'Cleans customer identifiers, joins gateway latency metrics onto transactions, and routes malformed records to an isolated review table.',
+          tools: ['PySpark', 'SQL'],
+        },
+        {
+          step: '04',
+          title: 'Business Marts & Q&A Analytics',
+          summary:
+            'Publishes customer risk profiles and regional gateway KPIs ready for BI dashboards and natural-language SQL exploration.',
+          tools: ['Delta Marts', 'BI Views'],
+        },
+      ],
+    },
     impact: [
-      'Unified 6 core banking and gateway entities (CMI, PayZone, Fatourati, CashPlus) into governed Delta tables.',
-      'Built watermark-driven CDC merges guaranteeing deterministic upserts across regional feeds.',
-      'Delivered Gold risk marts for self-service BI and natural-language SQL querying.',
+      'Unified 6 core banking and gateway entities (CMI, PayZone, Fatourati, CashPlus) into a single analytical platform.',
+      'Guaranteed idempotent incremental updates so job retries never duplicate financial totals.',
+      'Delivered risk and latency marts tailored for non-technical risk teams.',
     ],
     stack: ['Databricks', 'PySpark', 'Delta Lake', 'PostgreSQL', 'SQL'],
-    architecture: [
-      {
-        layer: '01 // SOURCE',
-        component: 'PostgreSQL + Blob CSV',
-        format: 'RDBMS + CSV',
-        tablesOrTopics: ['alphapay.transactions', 'credit_bureau_batch', 'gateway_logs'],
-        detail: 'OLTP accounts, KYC records, credit bureau pulls, and gateway settlements.',
-      },
-      {
-        layer: '02 // BRONZE',
-        component: 'Raw Append Landing',
-        format: 'Delta (Append)',
-        tablesOrTopics: ['bronze.pg_transactions', 'bronze.gateway_logs'],
-        detail: 'Immutable raw payloads tagged with _batch_id and _ingested_at.',
-      },
-      {
-        layer: '03 // SILVER',
-        component: 'Conformed Entities',
-        format: 'Delta (MERGE)',
-        tablesOrTopics: ['silver.dim_accounts', 'silver.fct_transactions'],
-        detail: 'CIN normalization, MAD validation, and idempotent CDC merges.',
-      },
-      {
-        layer: '04 // GOLD',
-        component: 'Risk & Gateway Marts',
-        format: 'Delta Marts',
-        tablesOrTopics: ['gold.mart_customer_risk', 'gold.mart_gateway_sla'],
-        detail: 'Pre-joined regional KPIs powering dashboards and Genie SQL.',
-      },
-    ],
-    schemas: [
-      {
-        tableName: 'silver.dim_accounts',
-        layer: 'Silver',
-        primaryKey: 'account_id',
-        partitionOrCluster: 'CLUSTER BY (agency_code)',
-        updateMode: 'Delta MERGE (SCD1)',
-        columns: [
-          { name: 'account_id', type: 'BIGINT', keyFlag: 'PK' },
-          { name: 'customer_id', type: 'INT', keyFlag: 'FK' },
-          { name: 'agency_code', type: 'STRING', keyFlag: 'CLUSTER' },
-          { name: 'currency', type: 'STRING' },
-          { name: 'status', type: 'STRING' },
-        ],
-      },
-      {
-        tableName: 'silver.fct_transactions',
-        layer: 'Silver',
-        primaryKey: 'txn_id',
-        partitionOrCluster: 'CLUSTER BY (txn_date, channel)',
-        updateMode: 'Idempotent MERGE',
-        columns: [
-          { name: 'txn_id', type: 'BIGINT', keyFlag: 'PK' },
-          { name: 'account_id', type: 'BIGINT', keyFlag: 'FK' },
-          { name: 'amount_mad', type: 'DECIMAL(18,2)' },
-          { name: 'channel', type: 'STRING', keyFlag: 'CLUSTER' },
-          { name: 'gateway_latency_ms', type: 'INT' },
-          { name: 'txn_timestamp', type: 'TIMESTAMP' },
-        ],
-      },
-      {
-        tableName: 'gold.mart_customer_risk',
-        layer: 'Gold',
-        primaryKey: 'customer_id',
-        partitionOrCluster: 'CLUSTER BY (region)',
-        updateMode: 'Batch Rebuild',
-        columns: [
-          { name: 'customer_id', type: 'INT', keyFlag: 'PK' },
-          { name: 'region', type: 'STRING', keyFlag: 'CLUSTER' },
-          { name: 'credit_score', type: 'INT' },
-          { name: 'overdue_amount_mad', type: 'DECIMAL(18,2)' },
-          { name: 'txn_volume_30d', type: 'DECIMAL(18,2)' },
-        ],
-      },
-    ],
-    relations: [
-      {
-        fromTable: 'silver.fct_transactions',
-        fromColumn: 'account_id',
-        toTable: 'silver.dim_accounts',
-        toColumn: 'account_id',
-        cardinality: 'N : 1',
-      },
-      {
-        fromTable: 'silver.dim_accounts',
-        fromColumn: 'customer_id',
-        toTable: 'gold.mart_customer_risk',
-        toColumn: 'customer_id',
-        cardinality: 'N : 1',
-      },
-    ],
-    qualityGates: [
-      {
-        boundary: 'Bronze -> Silver',
-        contract: 'txn_id IS NOT NULL AND UNIQUE',
-        enforcement: 'Route invalid rows to _dead_letter',
-      },
-      {
-        boundary: 'Silver',
-        contract: 'account_id IN dim_accounts',
-        enforcement: 'Flag orphan keys + batch alert',
-      },
-      {
-        boundary: 'Silver -> Gold',
-        contract: 'amount_mad > 0 AND valid gateway',
-        enforcement: 'Abort if violation rate > 0.5%',
-      },
-    ],
-    codeSnippet: {
-      filename: 'silver_merge_transactions.sql',
-      language: 'SQL',
-      content: `MERGE INTO silver.fct_transactions AS t
-USING (
-  SELECT
-    tr.txn_id, tr.account_id,
-    CAST(tr.amount AS DECIMAL(18,2)) AS amount_mad,
-    tr.channel, g.processing_time_ms AS gateway_latency_ms, tr.txn_timestamp
-  FROM bronze.pg_transactions tr
-  LEFT JOIN bronze.gateway_logs g ON tr.txn_id = g.txn_id
-  WHERE tr._batch_id = :batch_id
-  QUALIFY ROW_NUMBER() OVER (PARTITION BY tr.txn_id ORDER BY tr._ingested_at DESC) = 1
-) AS s
-ON t.txn_id = s.txn_id
-WHEN MATCHED THEN UPDATE SET *
-WHEN NOT MATCHED THEN INSERT *;`,
-    },
     decisions: [
       {
-        choice: 'Config-driven ingestion over per-table notebooks',
-        rationale: 'Onboards new bank feeds via metadata rows with zero pipeline duplication.',
+        choice: 'Configuration-driven ingestion over per-table scripts',
+        rationale: 'Allowed new banking feeds and gateway partners to be onboarded consistently without copy-pasting pipelines.',
       },
       {
-        choice: 'Delta Liquid Clustering over static date partitions',
-        rationale: 'Prevents small-file skew across uneven Moroccan city transaction volumes.',
+        choice: 'Immutable landing layer before transformations',
+        rationale: 'Made recovery from upstream formatting bugs repeatable without re-querying operational databases.',
       },
     ],
   },
@@ -242,121 +313,59 @@ WHEN NOT MATCHED THEN INSERT *;`,
     year: '2025',
     context: 'UM6P College of Computing',
     summary:
-      'Distributed ETL pipeline capturing DOM, network headers, and OCR features across 100K+ Tranco websites.',
-    ingestionMode: 'Sharded Parallel Crawl',
-    computeEngine: 'Python / Apache Spark',
-    orchestration: 'Worker Queues + Spark',
-    storageSink: 'Partitioned Parquet',
-    grain: '1 row / ad signal',
-    sla: 'Full Tranco sweep + live API',
+      'Distributed crawling and enrichment platform processing DOM trees, network telemetry, and OCR signals across 100K+ websites.',
+    repoUrl: 'https://github.com/NIDNASSER-Abdelmajid/crawler-addisclosure',
+    articleSlug: 'crawling-100k-domains-clean-etl',
+    wiki: {
+      problem:
+        'Large-scale web measurement studies generate noisy DOM trees, repeating third-party creatives, and slow OCR workloads that easily stall if coupled tightly to headless crawlers.',
+      solution:
+        'Decoupled parallel browser capture from Spark-based deduplication and OCR enrichment using staged Parquet checkpoints and perceptual asset hashing.',
+      workflow: [
+        {
+          step: '01',
+          title: 'Parallel Web Acquisition',
+          summary:
+            'Distributed worker pools crawl top Tranco domains to capture page markup, network logs, and disclosure markers.',
+          tools: ['Python', 'Headless Crawlers'],
+        },
+        {
+          step: '02',
+          title: 'Parquet Checkpoint Buffering',
+          summary:
+            'Flushes raw captures continuously into partitioned storage so site timeouts never derail heavy enrichment jobs.',
+          tools: ['Parquet', 'Linux'],
+        },
+        {
+          step: '03',
+          title: 'Hash Deduplication & OCR',
+          summary:
+            'Deduplicates identical ad banners across thousands of domains before running OCR and categorizing disclosures across a 12-class taxonomy.',
+          tools: ['Apache Spark', 'PySpark', 'OCR'],
+        },
+        {
+          step: '04',
+          title: 'Real-Time Classifier Support',
+          summary:
+            'Feeds curated features into downstream classification workflows and browser-side detection prototypes.',
+          tools: ['ML Features', 'API'],
+        },
+      ],
+    },
     impact: [
-      'Crawled 100K+ domains capturing DOM trees, network signals, and ad disclosure metadata.',
-      'Structured telemetry across 12 categories and 35 subcategories with automated OCR extraction.',
-      'Connected Spark feature enrichment to real-time client inference workflows.',
+      'Processed telemetry across 100K+ Tranco websites into clean, reproducible research datasets.',
+      'Organized noisy web signals into 12 top categories and 35 fine-grained disclosure subcategories.',
+      'Cut duplicate OCR computation dramatically by hashing identical third-party CDN assets upstream.',
     ],
     stack: ['Python', 'Apache Spark', 'ETL', 'OCR', 'Crawlers'],
-    repoUrl: 'https://github.com/NIDNASSER-Abdelmajid/crawler-addisclosure',
-    architecture: [
-      {
-        layer: '01 // CRAWL',
-        component: 'Tranco Worker Pool',
-        format: 'JSONL + HAR',
-        tablesOrTopics: ['raw_dom_snapshots', 'network_logs'],
-        detail: 'Headless capture of DOM elements and request metadata.',
-      },
-      {
-        layer: '02 // CLEAN',
-        component: 'Hash Deduplication',
-        format: 'Parquet',
-        tablesOrTopics: ['clean_ad_candidates'],
-        detail: 'URL normalization and SHA-256 creative deduplication.',
-      },
-      {
-        layer: '03 // ENRICH',
-        component: 'Spark + OCR Pipeline',
-        format: 'Feature Parquet',
-        tablesOrTopics: ['silver.web_ad_signals'],
-        detail: 'Banner text extraction and 12-category taxonomy mapping.',
-      },
-      {
-        layer: '04 // SERVE',
-        component: 'Inference Endpoint',
-        format: 'JSON API',
-        tablesOrTopics: ['inference_cache'],
-        detail: 'Low-latency verdicts for browser extension prototype.',
-      },
-    ],
-    schemas: [
-      {
-        tableName: 'raw.dom_captures',
-        layer: 'Bronze',
-        primaryKey: 'capture_id',
-        partitionOrCluster: 'PARTITION BY (crawl_date)',
-        updateMode: 'Append',
-        columns: [
-          { name: 'capture_id', type: 'STRING', keyFlag: 'PK' },
-          { name: 'domain', type: 'STRING' },
-          { name: 'asset_url', type: 'STRING' },
-          { name: 'status_code', type: 'INT' },
-        ],
-      },
-      {
-        tableName: 'silver.web_ad_signals',
-        layer: 'Silver',
-        primaryKey: 'signal_hash',
-        partitionOrCluster: 'PARTITION BY (crawl_date, taxonomy_l1)',
-        updateMode: 'Hash-Deduplicated Append',
-        columns: [
-          { name: 'signal_hash', type: 'STRING', keyFlag: 'PK' },
-          { name: 'capture_id', type: 'STRING', keyFlag: 'FK' },
-          { name: 'tranco_rank', type: 'INT' },
-          { name: 'taxonomy_l1', type: 'STRING', keyFlag: 'CLUSTER' },
-          { name: 'ocr_tokens', type: 'ARRAY<STRING>' },
-          { name: 'is_targeted_ad', type: 'BOOLEAN' },
-        ],
-      },
-    ],
-    relations: [
-      {
-        fromTable: 'silver.web_ad_signals',
-        fromColumn: 'capture_id',
-        toTable: 'raw.dom_captures',
-        toColumn: 'capture_id',
-        cardinality: 'N : 1',
-      },
-    ],
-    qualityGates: [
-      {
-        boundary: 'Bronze -> Silver',
-        contract: 'SHA-256 signal_hash UNIQUE',
-        enforcement: 'Collapse duplicate CDN banners',
-      },
-      {
-        boundary: 'Silver',
-        contract: 'status_code BETWEEN 200 AND 399',
-        enforcement: 'Drop failed HTTP captures',
-      },
-    ],
-    codeSnippet: {
-      filename: 'enrich_signals_spark.py',
-      language: 'PySpark',
-      content: `df_clean = (
-    spark.read.parquet(raw_path)
-    .filter(F.col("status_code").between(200, 399))
-    .withColumn("signal_hash", F.sha2(F.concat_ws("|", "domain", "dom_selector", "asset_url"), 256))
-    .dropDuplicates(["signal_hash"])
-    .withColumn("ocr_tokens", ocr_extract_udf(F.col("image_bytes")))
-)
-df_clean.write.mode("append").partitionBy("crawl_date").parquet(silver_path)`,
-    },
     decisions: [
       {
-        choice: 'Staged Parquet checkpoints before OCR enrichment',
-        rationale: 'Prevents crawler network timeouts from stalling CPU-heavy Spark jobs.',
+        choice: 'Checkpointing raw captures before Spark processing',
+        rationale: 'Kept flaky network I/O isolated from distributed compute clusters.',
       },
       {
-        choice: 'SHA-256 asset hashing pre-OCR',
-        rationale: 'Avoids running OCR repeatedly on identical third-party CDN creatives.',
+        choice: 'Pre-OCR cryptographic hashing of creative assets',
+        rationale: 'Eliminated repeated OCR passes on shared third-party ad creatives across domains.',
       },
     ],
   },
@@ -368,124 +377,59 @@ df_clean.write.mode("append").partitionBy("crawl_date").parquet(silver_path)`,
     year: '2024',
     context: 'Leyton',
     summary:
-      'Automated Python and Spark ETL unifying Salesforce, Odoo, and SAP into Star and Snowflake schema marts.',
-    ingestionMode: 'Daily Incremental ERP',
-    computeEngine: 'Python / Apache Spark',
-    orchestration: 'Scheduled Batch Pipelines',
-    storageSink: 'SQL Data Warehouse',
-    grain: '1 row / invoice line',
-    sla: 'Daily close (06:00 UTC)',
+      'Automated ETL platform unifying Salesforce, Odoo, and SAP financial feeds into a governed Star Schema warehouse for executive BI.',
+    repoUrl: 'https://github.com/NIDNASSER-Abdelmajid/SALES-ANALYTICS-DASHBOARD',
+    articleSlug: 'star-schema-multi-erp-warehouses',
+    wiki: {
+      problem:
+        'Customer, billing, and accounting metrics lived in separate Salesforce, Odoo, and SAP silos, forcing analysts into slow, error-prone spreadsheet reconciliations before reporting.',
+      solution:
+        'Built automated extraction workflows feeding a conformed Star and Snowflake warehouse with customer identity crosswalks and strict ledger balance checks.',
+      workflow: [
+        {
+          step: '01',
+          title: 'Cross-System Extraction',
+          summary:
+            'Scheduled incremental pulls from CRM, billing, and general ledger exports into a central staging area.',
+          tools: ['Python', 'Apache Spark'],
+        },
+        {
+          step: '02',
+          title: 'Client Crosswalk Resolution',
+          summary:
+            'Maps fragmented account IDs across Salesforce, Odoo, and SAP onto unified client records while preserving original keys for audits.',
+          tools: ['SQL', 'ETL'],
+        },
+        {
+          step: '03',
+          title: 'Dimensional Modeling',
+          summary:
+            'Structures invoice and contract data into clean fact and dimension models tailored for churn, retention, and lifetime value queries.',
+          tools: ['Star Schema', 'SQL Server'],
+        },
+        {
+          step: '04',
+          title: 'Governed BI Delivery',
+          summary:
+            'Powers interactive finance and operations dashboards after passing automated variance checks against SAP period totals.',
+          tools: ['Power BI', 'Tableau'],
+        },
+      ],
+    },
     impact: [
-      'Automated cross-ERP ingestion eliminating manual financial spreadsheet reconciliation.',
-      'Modeled Star and Snowflake marts with conformed client crosswalks and SQL tuning.',
-      'Powered governed Power BI and Tableau dashboards for CLV, churn, and margin.',
+      'Replaced recurring manual CSV reconciliations with automated daily pipeline runs.',
+      'Delivered trusted CLV, margin, and retention metrics shared across finance and leadership teams.',
+      'Preserved full invoice-level traceability back to native ERP identifiers.',
     ],
     stack: ['Python', 'Apache Spark', 'SQL', 'Star Schema', 'Power BI'],
-    repoUrl: 'https://github.com/NIDNASSER-Abdelmajid/SALES-ANALYTICS-DASHBOARD',
-    architecture: [
-      {
-        layer: '01 // EXTRACT',
-        component: 'ERP Connectors',
-        format: 'API + SQL',
-        tablesOrTopics: ['stg_salesforce', 'stg_odoo', 'stg_sap'],
-        detail: 'Incremental pulls from CRM, billing, and accounting ledgers.',
-      },
-      {
-        layer: '02 // CONFORM',
-        component: 'Entity Crosswalk',
-        format: 'Staging SQL',
-        tablesOrTopics: ['int_client_crosswalk'],
-        detail: 'Resolves disparate customer keys and FX rates.',
-      },
-      {
-        layer: '03 // MODEL',
-        component: 'Star Schema Marts',
-        format: 'Indexed RDBMS',
-        tablesOrTopics: ['dw.fct_revenue', 'dw.dim_client'],
-        detail: 'Indexed fact tables and conformed financial dimensions.',
-      },
-      {
-        layer: '04 // BI',
-        component: 'Semantic Layer',
-        format: 'Power BI / Tableau',
-        tablesOrTopics: ['kpi_clv', 'kpi_retention'],
-        detail: 'Single source of truth for finance and operations.',
-      },
-    ],
-    schemas: [
-      {
-        tableName: 'dw.dim_client',
-        layer: 'Serving',
-        primaryKey: 'client_sk',
-        partitionOrCluster: 'INDEXED (client_sk)',
-        updateMode: 'SCD Type 1',
-        columns: [
-          { name: 'client_sk', type: 'INT', keyFlag: 'PK' },
-          { name: 'salesforce_id', type: 'VARCHAR(32)' },
-          { name: 'sap_account_id', type: 'VARCHAR(32)' },
-          { name: 'segment', type: 'VARCHAR(32)' },
-        ],
-      },
-      {
-        tableName: 'dw.fct_revenue',
-        layer: 'Serving',
-        primaryKey: 'invoice_line_sk',
-        partitionOrCluster: 'INDEXED (date_key, client_sk)',
-        updateMode: 'Period Upsert',
-        columns: [
-          { name: 'invoice_line_sk', type: 'BIGINT', keyFlag: 'PK' },
-          { name: 'client_sk', type: 'INT', keyFlag: 'FK' },
-          { name: 'date_key', type: 'INT', keyFlag: 'CLUSTER' },
-          { name: 'source_erp', type: 'VARCHAR(16)' },
-          { name: 'recognized_amount', type: 'DECIMAL(18,2)' },
-        ],
-      },
-    ],
-    relations: [
-      {
-        fromTable: 'dw.fct_revenue',
-        fromColumn: 'client_sk',
-        toTable: 'dw.dim_client',
-        toColumn: 'client_sk',
-        cardinality: 'N : 1',
-      },
-    ],
-    qualityGates: [
-      {
-        boundary: 'Staging -> DW',
-        contract: 'ABS(dw_total - sap_gl_total) <= 0.01',
-        enforcement: 'Block BI refresh on variance',
-      },
-      {
-        boundary: 'DW',
-        contract: 'client_sk IS NOT NULL',
-        enforcement: 'Route unmapped IDs to audit queue',
-      },
-    ],
-    codeSnippet: {
-      filename: 'mart_clv_churn.sql',
-      language: 'SQL',
-      content: `WITH monthly_rev AS (
-  SELECT c.client_sk, d.year_month, SUM(f.recognized_amount) AS mrr
-  FROM dw.fct_revenue f
-  JOIN dw.dim_client c ON f.client_sk = c.client_sk
-  JOIN dw.dim_calendar d ON f.date_key = d.date_key
-  GROUP BY c.client_sk, d.year_month
-)
-SELECT
-  client_sk, year_month, mrr,
-  LAG(mrr) OVER (PARTITION BY client_sk ORDER BY year_month) AS prev_mrr,
-  SUM(mrr) OVER (PARTITION BY client_sk) AS cumulative_clv
-FROM monthly_rev;`,
-    },
     decisions: [
       {
-        choice: 'Conformed crosswalk keys over mutating ERP IDs',
-        rationale: 'Maintains complete audit traceability back to source SAP and Odoo invoices.',
+        choice: 'Crosswalk identity table over overwriting native ERP IDs',
+        rationale: 'Protected auditability across finance teams working in different source tools.',
       },
       {
-        choice: 'Monthly pre-aggregated BI views + atomic fact table',
-        rationale: 'Delivers fast executive dashboards without losing invoice-line drill-through.',
+        choice: 'Warehouse KPI computation before BI dashboards',
+        rationale: 'Prevented diverging numbers between Power BI and Tableau reports.',
       },
     ],
   },
@@ -497,118 +441,57 @@ FROM monthly_rev;`,
     year: '2024',
     context: 'Distributed Systems (Temp Showcase)',
     summary:
-      'Partitioned Apache Kafka event pipeline with idempotent consumers, dead-letter queues, and live projections.',
-    ingestionMode: 'Continuous Event Stream',
-    computeEngine: 'Apache Kafka / Python / Java',
-    orchestration: 'Docker Compose Mesh',
-    storageSink: 'Kafka Log + Read Store',
-    grain: '1 immutable event / offset',
-    sla: 'Sub-second delivery',
+      'Partitioned Apache Kafka event pipeline with dead-letter recovery, containerized consumers, and real-time read projections.',
+    repoUrl: 'https://github.com/NIDNASSER-Abdelmajid/Real-Time-Socket-Streaming',
+    wiki: {
+      problem:
+        'Direct point-to-point webhooks broke easily during traffic bursts, dropped malformed payloads silently, and struggled to keep real-time client dashboards synchronized.',
+      solution:
+        'Introduced Apache Kafka as a durable event backbone with entity-keyed partitions, isolated dead-letter topics, and Dockerized workers feeding live views.',
+      workflow: [
+        {
+          step: '01',
+          title: 'Entity-Keyed Publishing',
+          summary:
+            'Routes all events for a given entity into the same Kafka partition to keep updates strictly in order.',
+          tools: ['Python', 'Java', 'Apache Kafka'],
+        },
+        {
+          step: '02',
+          title: 'Broker Buffering & Dead-Letter Routing',
+          summary:
+            'Decouples bursty producers from downstream processors and shunts invalid messages into a replayable quarantine topic.',
+          tools: ['Apache Kafka', 'Docker'],
+        },
+        {
+          step: '03',
+          title: 'Safe Worker Processing',
+          summary:
+            'Consumer groups acknowledge message offsets only after state updates are safely written downstream.',
+          tools: ['Consumer Groups', 'Python'],
+        },
+        {
+          step: '04',
+          title: 'Real-Time Projections',
+          summary:
+            'Streams live state transitions straight to active socket and dashboard subscribers.',
+          tools: ['Streaming Views', 'Sockets'],
+        },
+      ],
+    },
     impact: [
-      'Engineered partitioned Kafka topics and consumer groups sustaining high event throughput.',
-      'Decoupled event producers from live socket projections via Dockerized worker pools.',
+      'Maintained sub-second delivery under bursty producer workloads without blocking client threads.',
+      'Guaranteed zero silent message loss via manual offset control and dead-letter inspection.',
     ],
     stack: ['Apache Kafka', 'Python', 'Java', 'Docker'],
-    repoUrl: 'https://github.com/NIDNASSER-Abdelmajid/Real-Time-Socket-Streaming',
-    architecture: [
-      {
-        layer: '01 // PRODUCER',
-        component: 'Keyed Publishers',
-        format: 'JSON Events',
-        tablesOrTopics: ['events.raw.stream'],
-        detail: 'Publishes keyed records with acks=all durability.',
-      },
-      {
-        layer: '02 // BROKER',
-        component: 'Kafka Partitions',
-        format: 'Commit Log',
-        tablesOrTopics: ['events.validated.v1', 'events.dlq.v1'],
-        detail: 'Per-entity ordering and isolated dead-letter routing.',
-      },
-      {
-        layer: '03 // WORKER',
-        component: 'Consumer Group',
-        format: 'Manual Offsets',
-        tablesOrTopics: ['worker-agg-group'],
-        detail: 'Validates schemas and commits offsets post-write.',
-      },
-      {
-        layer: '04 // SINK',
-        component: 'Live Read View',
-        format: 'Materialized State',
-        tablesOrTopics: ['live_state_view'],
-        detail: 'Streams real-time state updates to clients.',
-      },
-    ],
-    schemas: [
-      {
-        tableName: 'topic://events.validated.v1',
-        layer: 'Stream',
-        primaryKey: 'event_id',
-        partitionOrCluster: 'KEY = entity_id (12 partitions)',
-        updateMode: 'Append-Only Log',
-        columns: [
-          { name: 'event_id', type: 'UUID', keyFlag: 'PK' },
-          { name: 'entity_id', type: 'STRING', keyFlag: 'CLUSTER' },
-          { name: 'event_type', type: 'STRING' },
-          { name: 'emitted_at', type: 'EPOCH_MS' },
-        ],
-      },
-      {
-        tableName: 'store.live_state_view',
-        layer: 'Serving',
-        primaryKey: 'entity_id',
-        partitionOrCluster: 'KEY = entity_id',
-        updateMode: 'Idempotent Upsert',
-        columns: [
-          { name: 'entity_id', type: 'STRING', keyFlag: 'PK' },
-          { name: 'last_event_id', type: 'UUID', keyFlag: 'FK' },
-          { name: 'event_count', type: 'BIGINT' },
-        ],
-      },
-    ],
-    relations: [
-      {
-        fromTable: 'store.live_state_view',
-        fromColumn: 'last_event_id',
-        toTable: 'topic://events.validated.v1',
-        toColumn: 'event_id',
-        cardinality: '1 : 1',
-      },
-    ],
-    qualityGates: [
-      {
-        boundary: 'Consumer Entry',
-        contract: 'Valid JSON schema',
-        enforcement: 'Route malformed payloads to events.dlq.v1',
-      },
-      {
-        boundary: 'Sink Write',
-        contract: 'Unique event_id',
-        enforcement: 'Skip replayed offsets safely',
-      },
-    ],
-    codeSnippet: {
-      filename: 'kafka_consumer_worker.py',
-      language: 'Python',
-      content: `for msg in consumer:
-    payload = validate_schema(msg.value)
-    if payload is None:
-        dlq_producer.send("events.dlq.v1", value=msg.value)
-        consumer.commit()
-        continue
-
-    apply_idempotent_upsert(state_store, payload)
-    consumer.commit()`,
-    },
     decisions: [
       {
-        choice: 'Partitioning by entity_id over round-robin',
-        rationale: 'Preserves strict causal ordering per entity across parallel consumers.',
+        choice: 'Partitioning by entity key over round-robin',
+        rationale: 'Avoided out-of-order state overwrites during rapid updates.',
       },
       {
-        choice: 'Manual post-write offset commits',
-        rationale: 'Prevents silent message loss if a worker crashes mid-processing.',
+        choice: 'Manual post-write consumer commits',
+        rationale: 'Ensured crashed workers cleanly replay uncommitted events on restart.',
       },
     ],
   },
@@ -620,113 +503,45 @@ FROM monthly_rev;`,
     year: '2025',
     context: "ONDE'Child",
     summary:
-      'ETL and NLP enrichment pipelines standardizing structured and free-text institutional records in PostgreSQL.',
-    ingestionMode: 'Hybrid Batch + Scoring API',
-    computeEngine: 'Python / Scikit-learn',
-    orchestration: 'Scheduled ETL + FastAPI',
-    storageSink: 'PostgreSQL Core',
-    grain: '1 row / case dossier',
-    sla: 'Daily sync + sync triage API',
+      'Case ingestion, privacy-safe standardization, and NLP triage pipeline powering prioritized operational workflows in PostgreSQL.',
+    wiki: {
+      problem:
+        'Case reports from institutional partners arrived with inconsistent schemas and unstructured narrative notes, slowing urgent prioritization decisions.',
+      solution:
+        'Built an end-to-end standardization pipeline in PostgreSQL paired with automated NLP tagging and a REST scoring service.',
+      workflow: [
+        {
+          step: '01',
+          title: 'Heterogeneous Record Ingestion',
+          summary:
+            'Normalizes mixed institutional spreadsheets and form feeds into unified case structures.',
+          tools: ['Python', 'PostgreSQL'],
+        },
+        {
+          step: '02',
+          title: 'Privacy-First Feature Prep',
+          summary:
+            'Separates direct identifiers before extracting signals from narrative case summaries.',
+          tools: ['Python', 'NLP'],
+        },
+        {
+          step: '03',
+          title: 'Automated Triage Scoring',
+          summary:
+            'Scores incoming dossiers with versioned NLP models and logs every prediction alongside timestamps.',
+          tools: ['Scikit-learn', 'FastAPI'],
+        },
+      ],
+    },
     impact: [
-      'Unified heterogeneous institutional feeds into clean PostgreSQL schemas.',
-      'Operationalized NLP classification pipelines behind REST scoring endpoints.',
+      'Consolidated fragmented case records into clean PostgreSQL structures.',
+      'Shortened triage turnaround through automated narrative tagging and prioritization scoring.',
     ],
     stack: ['Python', 'PostgreSQL', 'ETL', 'NLP', 'FastAPI'],
-    architecture: [
-      {
-        layer: '01 // INGEST',
-        component: 'Institutional Adapters',
-        format: 'CSV + JSON',
-        tablesOrTopics: ['raw_case_reports'],
-        detail: 'Normalizes encodings, dates, and institutional codes.',
-      },
-      {
-        layer: '02 // ENRICH',
-        component: 'NLP Triage Pipeline',
-        format: 'Feature Matrix',
-        tablesOrTopics: ['nlp_case_tags'],
-        detail: 'Extracts severity tags from unstructured narratives.',
-      },
-      {
-        layer: '03 // CORE',
-        component: 'PostgreSQL Warehouse',
-        format: 'Normalized Tables',
-        tablesOrTopics: ['core.cases', 'core.risk_assessments'],
-        detail: 'Stores versioned predictions with full audit timestamps.',
-      },
-      {
-        layer: '04 // API',
-        component: 'FastAPI Scoring',
-        format: 'REST JSON',
-        tablesOrTopics: ['/api/v1/cases/score'],
-        detail: 'Real-time case prioritization for officers.',
-      },
-    ],
-    schemas: [
-      {
-        tableName: 'core.cases',
-        layer: 'Source',
-        primaryKey: 'case_id',
-        partitionOrCluster: 'INDEXED (created_at)',
-        updateMode: 'Upsert',
-        columns: [
-          { name: 'case_id', type: 'BIGINT', keyFlag: 'PK' },
-          { name: 'region_code', type: 'VARCHAR(16)' },
-          { name: 'created_at', type: 'TIMESTAMPTZ', keyFlag: 'CLUSTER' },
-        ],
-      },
-      {
-        tableName: 'core.risk_assessments',
-        layer: 'Serving',
-        primaryKey: 'assessment_id',
-        partitionOrCluster: 'INDEXED (case_id)',
-        updateMode: 'Append-Only History',
-        columns: [
-          { name: 'assessment_id', type: 'UUID', keyFlag: 'PK' },
-          { name: 'case_id', type: 'BIGINT', keyFlag: 'FK' },
-          { name: 'priority_tier', type: 'SMALLINT' },
-          { name: 'model_version', type: 'VARCHAR(32)' },
-        ],
-      },
-    ],
-    relations: [
-      {
-        fromTable: 'core.risk_assessments',
-        fromColumn: 'case_id',
-        toTable: 'core.cases',
-        toColumn: 'case_id',
-        cardinality: 'N : 1',
-      },
-    ],
-    qualityGates: [
-      {
-        boundary: 'Ingest -> Training',
-        contract: 'Zero direct PII in ML export',
-        enforcement: 'Hash identifiers pre-export',
-      },
-      {
-        boundary: 'Serving',
-        contract: 'model_version IS NOT NULL',
-        enforcement: 'PostgreSQL NOT NULL constraint',
-      },
-    ],
-    codeSnippet: {
-      filename: 'case_pipeline.py',
-      language: 'Python',
-      content: `def transform_case_record(raw: dict) -> CleanCase:
-    text = normalize_whitespace(raw.get("narrative", ""))
-    tokens = nlp_pipeline.extract_features(text)
-    priority = risk_model.predict_tier(structured=raw["metadata"], text_features=tokens)
-    return CleanCase(
-        case_id=raw["case_id"],
-        priority_tier=priority,
-        model_version=risk_model.version,
-    )`,
-    },
     decisions: [
       {
-        choice: 'Append-only risk_assessments over in-place updates',
-        rationale: 'Preserves full historical auditability of every model scoring run.',
+        choice: 'Append-only prediction history over overwriting priority scores',
+        rationale: 'Gave case officers full visibility into how assessments changed over time.',
       },
     ],
   },
@@ -738,87 +553,46 @@ FROM monthly_rev;`,
     year: '2025',
     context: 'Open Source & Client Pipelines',
     summary:
-      'Resilient Scrapy and Selenium extraction pipelines loading dynamic catalogs and market feeds into SQL and Parquet.',
-    ingestionMode: 'Scheduled Incremental Crawl',
-    computeEngine: 'Python / Scrapy / Pandas',
-    orchestration: 'Containerized Cron',
-    storageSink: 'PostgreSQL + Parquet',
-    grain: '1 row / SKU or OHLCV bar',
-    sla: 'Hourly / daily snapshots',
+      'Production Scrapy and Selenium extraction pipelines delivering validated market feeds and dynamic web catalogs to SQL and Parquet.',
+    repoUrl: 'https://github.com/NIDNASSER-Abdelmajid/ScrapyGram',
+    wiki: {
+      problem:
+        'Client market feeds and dynamic JavaScript storefronts frequently changed markup or throttled naive requests, breaking downstream pricing models.',
+      solution:
+        'Engineered modular Scrapy/Selenium extractors with strict runtime item validation, baseline row-count guards, and batched PostgreSQL loading.',
+      workflow: [
+        {
+          step: '01',
+          title: 'Resilient Traversal',
+          summary:
+            'Handles pagination cursors, dynamic rendering, and adaptive throttling gracefully across targets.',
+          tools: ['Scrapy', 'Selenium'],
+        },
+        {
+          step: '02',
+          title: 'Validation & Drift Guard',
+          summary:
+            'Verifies extracted field types and compares batch counts against historical baselines before overwriting snapshots.',
+          tools: ['Python', 'Pandas'],
+        },
+        {
+          step: '03',
+          title: 'Batched Historical Loading',
+          summary:
+            'Streams clean records in multi-hundred-row batches into PostgreSQL and archive Parquet files.',
+          tools: ['PostgreSQL', 'Docker'],
+        },
+      ],
+    },
     impact: [
-      'Solved dynamic JS rendering, pagination state, and anti-bot rate limits cleanly.',
-      'Built automated schema validation and batched upserts cutting DB round-trips by 95%.',
+      'Delivered 45+ client extraction and automation workflows with high reliability.',
+      'Cut database write overhead dramatically through batched SQL upserts and pre-load checks.',
     ],
     stack: ['Python', 'Scrapy', 'Selenium', 'PostgreSQL', 'Pandas'],
-    repoUrl: 'https://github.com/NIDNASSER-Abdelmajid/ScrapyGram',
-    architecture: [
-      {
-        layer: '01 // DISCOVERY',
-        component: 'Scrapy Spiders',
-        format: 'HTTP / DOM',
-        tablesOrTopics: ['frontier_urls'],
-        detail: 'Exponential backoff and pagination cursors.',
-      },
-      {
-        layer: '02 // PARSE',
-        component: 'Pydantic Validators',
-        format: 'Typed Items',
-        tablesOrTopics: ['parsed_records'],
-        detail: 'Strict type casting at extraction time.',
-      },
-      {
-        layer: '03 // GUARD',
-        component: 'Drift Thresholds',
-        format: 'Staging Frame',
-        tablesOrTopics: ['validated_batch'],
-        detail: 'Checks row counts against 7-day baseline.',
-      },
-      {
-        layer: '04 // LOAD',
-        component: 'Batched Upserts',
-        format: 'SQL + Parquet',
-        tablesOrTopics: ['market.catalog_snapshots'],
-        detail: '500-row batch merges into historical tables.',
-      },
-    ],
-    schemas: [
-      {
-        tableName: 'market.catalog_snapshots',
-        layer: 'Serving',
-        primaryKey: '(item_sku, snapshot_date)',
-        partitionOrCluster: 'PARTITION BY snapshot_date',
-        updateMode: 'Snapshot Upsert',
-        columns: [
-          { name: 'item_sku', type: 'VARCHAR(64)', keyFlag: 'PK' },
-          { name: 'snapshot_date', type: 'DATE', keyFlag: 'CLUSTER' },
-          { name: 'price_numeric', type: 'DECIMAL(12,2)' },
-          { name: 'availability', type: 'BOOLEAN' },
-        ],
-      },
-    ],
-    relations: [],
-    qualityGates: [
-      {
-        boundary: 'Parse -> Load',
-        contract: 'row_count >= 0.80 * 7d_avg',
-        enforcement: 'Halt overwrite and retain last valid snapshot',
-      },
-    ],
-    codeSnippet: {
-      filename: 'item_validation_pipeline.py',
-      language: 'Python',
-      content: `class PostgresUpsertPipeline:
-    def process_item(self, item, spider):
-        record = CatalogItemModel.model_validate(dict(item))
-        self.buffer.append(record.model_dump())
-        if len(self.buffer) >= 500:
-            self.flush_upsert()
-        return item`,
-    },
     decisions: [
       {
-        choice: '500-row batched upserts over per-item writes',
-        rationale: 'Cuts database network overhead by 95%+ during full catalog sweeps.',
+        choice: 'Pre-load row-count drift guard',
+        rationale: 'Stopped broken layout changes from wiping valid historical snapshots.',
       },
     ],
   },
@@ -902,14 +676,64 @@ export const EDUCATION: EducationItem[] = [
   },
 ]
 
+// To enable "Verify Link" or "View Image" buttons on any credential, set credentialUrl and/or imageUrl.
 export const CREDENTIALS: CredentialItem[] = [
-  { id: 'huawei-ai', title: 'HCIA-AI V3.5 Certified', issuer: 'Huawei', year: '2025', category: 'Certification' },
-  { id: 'voices-deep-tech', title: 'Voices of Deep Tech MEA', issuer: 'Regional Honor', year: '2025', category: 'Recognition' },
-  { id: 'oracle-genai', title: 'OCI 2024 Generative AI Certified', issuer: 'Oracle', year: '2024', category: 'Certification' },
-  { id: 'hult-prize', title: '1st Place: Hult Prize Local', issuer: 'ENSAM Rabat', year: '2024', category: 'Recognition' },
-  { id: 'mckinsey-forward', title: 'McKinsey Forward Program', issuer: 'McKinsey', year: '2023', category: 'Certification' },
-  { id: 'google-pm', title: 'Project Management', issuer: 'Google', year: '2023', category: 'Certification' },
-  { id: 'efset-c2', title: 'English Proficiency (C2)', issuer: 'EF SET', year: '2022', category: 'Certification' },
+  {
+    id: 'huawei-ai',
+    title: 'HCIA-AI V3.5 Certified',
+    issuer: 'Huawei',
+    year: '2025',
+    category: 'Certification',
+    summary: 'Core machine learning, neural networks, and AI deployment foundations on Huawei Cloud.',
+  },
+  {
+    id: 'voices-deep-tech',
+    title: 'Voices of Deep Tech MEA',
+    issuer: 'Regional Honor',
+    year: '2025',
+    category: 'Recognition',
+    summary: 'Selected across Middle East and Africa regional deep-tech innovation initiatives.',
+  },
+  {
+    id: 'oracle-genai',
+    title: 'OCI 2024 Generative AI Certified',
+    issuer: 'Oracle',
+    year: '2024',
+    category: 'Certification',
+    summary: 'Large language models, vector retrieval pipelines, and managed OCI generative AI deployment.',
+  },
+  {
+    id: 'hult-prize',
+    title: '1st Place: Hult Prize Local',
+    issuer: 'ENSAM Rabat',
+    year: '2024',
+    category: 'Recognition',
+    summary: 'First-place award for social impact entrepreneurship and applied technical execution.',
+  },
+  {
+    id: 'mckinsey-forward',
+    title: 'McKinsey Forward Program',
+    issuer: 'McKinsey & Company',
+    year: '2023',
+    category: 'Certification',
+    summary: 'Structured problem-solving, analytical communication, and digital delivery practices.',
+  },
+  {
+    id: 'google-pm',
+    title: 'Project Management',
+    issuer: 'Google',
+    year: '2023',
+    category: 'Certification',
+    summary: 'Iterative delivery planning, stakeholder alignment, and risk mitigation across technical teams.',
+  },
+  {
+    id: 'efset-c2',
+    title: 'English Proficiency (C2)',
+    issuer: 'EF SET',
+    year: '2022',
+    category: 'Certification',
+    summary: 'C2 Proficient level across reading and listening comprehension.',
+  },
 ]
 
 export const STACK_MATRIX: StackRow[] = [

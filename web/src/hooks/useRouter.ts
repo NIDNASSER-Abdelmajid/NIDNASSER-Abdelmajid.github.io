@@ -4,6 +4,7 @@ export type RouteMatch =
   | { page: 'home' }
   | { page: 'projects'; projectId: string | null }
   | { page: 'experience' }
+  | { page: 'credentials' }
   | { page: 'stack' }
   | { page: 'blog'; slug: string | null }
   | { page: 'contact' }
@@ -26,6 +27,8 @@ export function parseRoute(path: string): RouteMatch {
       return { page: 'projects', projectId: param ?? null }
     case 'experience':
       return { page: 'experience' }
+    case 'credentials':
+      return { page: 'credentials' }
     case 'stack':
       return { page: 'stack' }
     case 'blog':

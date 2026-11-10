@@ -7,6 +7,7 @@ import { useRouter } from './hooks/useRouter'
 import { useTheme } from './hooks/useTheme'
 import { BlogPage } from './pages/BlogPage'
 import { ContactPage } from './pages/ContactPage'
+import { CredentialsPage } from './pages/CredentialsPage'
 import { ExperiencePage } from './pages/ExperiencePage'
 import { HomePage } from './pages/HomePage'
 import { ProjectsPage } from './pages/ProjectsPage'
@@ -46,6 +47,8 @@ export function App() {
         )
       case 'experience':
         return <ExperiencePage />
+      case 'credentials':
+        return <CredentialsPage />
       case 'stack':
         return <StackPage />
       case 'blog':

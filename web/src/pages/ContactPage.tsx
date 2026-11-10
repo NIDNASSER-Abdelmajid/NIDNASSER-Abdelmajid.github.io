@@ -21,7 +21,7 @@ export function ContactPage({ copied, onCopyEmail }: ContactPageProps) {
         <div className="mb-10 border-b border-neutral-200 pb-8 dark:border-neutral-800">
           <div className="mb-2 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
             <Terminal className="h-3.5 w-3.5" strokeWidth={1.8} />
-            <span>05 // Connect</span>
+            <span>06 // Connect</span>
           </div>
           <h1 className="text-3xl font-semibold tracking-tight text-neutral-950 sm:text-4xl dark:text-neutral-50">
             Contact

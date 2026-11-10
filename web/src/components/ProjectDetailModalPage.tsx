@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react'
 import {
+  AlertCircle,
   ArrowLeft,
   ArrowRight,
   ArrowUpRight,
-  Check,
-  Code2,
-  Copy,
-  Database,
-  GitBranch,
+  BookOpen,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Compass,
   Layers,
-  ShieldCheck,
-  Table2,
+  Target,
+  Workflow,
   X,
 } from 'lucide-react'
 import { PROJECTS } from '../data/portfolio'
@@ -20,60 +21,67 @@ interface ProjectDetailModalPageProps {
   projectId: string
   onClose: () => void
   onSelectProject: (id: string) => void
+  onOpenArticle: (slug: string) => void
 }
 
 export function ProjectDetailModalPage({
   projectId,
   onClose,
   onSelectProject,
+  onOpenArticle,
 }: ProjectDetailModalPageProps) {
   const index = PROJECTS.findIndex((p) => p.id === projectId)
   const project = index >= 0 ? PROJECTS[index] : PROJECTS[0]
   const prevProject = index > 0 ? PROJECTS[index - 1] : null
   const nextProject = index < PROJECTS.length - 1 ? PROJECTS[index + 1] : null
 
-  const [selectedStageIdx, setSelectedStageIdx] = useState(0)
-  const [schemaView, setSchemaView] = useState<'erd' | 'table'>('erd')
-  const [copiedCode, setCopiedCode] = useState(false)
+  const images = project.images ?? []
+  const [slideIdx, setSlideIdx] = useState(0)
+  const [showImageContext, setShowImageContext] = useState(false)
 
   useEffect(() => {
-    setSelectedStageIdx(0)
-    setSchemaView('erd')
-    setCopiedCode(false)
+    setSlideIdx(0)
+    setShowImageContext(false)
   }, [project.id])
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose()
+      } else if (images.length > 1 && e.key === 'ArrowRight') {
+        setSlideIdx((prev) => (prev + 1) % images.length)
+        setShowImageContext(false)
+      } else if (images.length > 1 && e.key === 'ArrowLeft') {
+        setSlideIdx((prev) => (prev - 1 + images.length) % images.length)
+        setShowImageContext(false)
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [onClose])
+  }, [images.length, onClose])
 
-  const activeStage = project.architecture[selectedStageIdx] ?? project.architecture[0]
+  const currentImage = images[slideIdx]
 
-  const copySnippet = () => {
-    navigator.clipboard?.writeText(project.codeSnippet.content).catch(() => {})
-    setCopiedCode(true)
-    window.setTimeout(() => setCopiedCode(false), 1800)
+  const goSlide = (next: number) => {
+    if (images.length === 0) return
+    setSlideIdx((next + images.length) % images.length)
+    setShowImageContext(false)
   }
 
   return (
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={`Pipeline specification for ${project.title}`}
+      aria-label={`Project wiki for ${project.title}`}
       className="fixed inset-0 z-50 overflow-y-auto bg-neutral-950/75 p-2 backdrop-blur-xs sm:p-6"
       onClick={onClose}
     >
       <div
-        className="mx-auto my-2 max-w-5xl overflow-hidden rounded-xl border border-neutral-300 bg-white shadow-2xl dark:border-neutral-800 dark:bg-neutral-950"
+        className="mx-auto my-2 max-w-4xl overflow-hidden rounded-xl border border-neutral-300 bg-white shadow-2xl dark:border-neutral-800 dark:bg-neutral-950"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Top Sticky Spec Bar */}
-        <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 bg-white/95 px-5 py-3.5 backdrop-blur-md sm:px-8 dark:border-neutral-800 dark:bg-neutral-950/95">
+        {/* Top Sticky Wiki Header */}
+        <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 bg-white/95 px-5 py-3.5 backdrop-blur-md sm:px-8 dark:border-neutral-800 dark:bg-neutral-950/95">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -84,11 +92,22 @@ export function ProjectDetailModalPage({
               <span>Projects</span>
             </button>
             <span className="font-mono text-xs text-neutral-500 dark:text-neutral-400">
-              {project.code} // DATA SPEC
+              {project.code} // PROJECT WIKI
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {project.articleSlug && (
+              <button
+                type="button"
+                onClick={() => onOpenArticle(project.articleSlug!)}
+                className="inline-flex items-center gap-1.5 rounded-md bg-neutral-950 px-3 py-1.5 font-mono text-xs text-neutral-50 transition-colors hover:bg-neutral-800 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
+              >
+                <BookOpen className="h-3.5 w-3.5" strokeWidth={1.8} />
+                <span>Read Article</span>
+              </button>
+            )}
+
             {project.repoUrl && (
               <a
                 href={project.repoUrl}
@@ -101,10 +120,11 @@ export function ProjectDetailModalPage({
                 <ArrowUpRight className="h-3 w-3" strokeWidth={1.8} />
               </a>
             )}
+
             <button
               type="button"
               onClick={onClose}
-              aria-label="Close specification page"
+              aria-label="Close project wiki"
               className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-neutral-100 text-neutral-600 transition-colors hover:bg-neutral-200 hover:text-neutral-950 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-50"
             >
               <X className="h-4 w-4" strokeWidth={1.8} />
@@ -113,7 +133,7 @@ export function ProjectDetailModalPage({
         </div>
 
         <div className="divide-y divide-neutral-200 px-5 sm:px-8 dark:divide-neutral-800">
-          {/* 1. Header & Flat Spec Rail */}
+          {/* Wiki Hero Overview */}
           <div className="py-8">
             <div className="flex flex-wrap items-center gap-2.5 font-mono text-xs text-neutral-500 dark:text-neutral-400">
               <span className="rounded bg-neutral-100 px-2.5 py-0.5 text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100">
@@ -128,313 +148,192 @@ export function ProjectDetailModalPage({
             <h1 className="mt-3 text-2xl font-semibold tracking-tight text-neutral-950 sm:text-3xl dark:text-neutral-50">
               {project.title}
             </h1>
-            <p className="mt-2.5 max-w-3xl text-sm sm:text-base leading-relaxed text-neutral-700 dark:text-neutral-300">
+            <p className="mt-2.5 text-sm sm:text-base leading-relaxed text-neutral-700 dark:text-neutral-300">
               {project.summary}
             </p>
-
-            {/* Flat hairline key-value spec strip (zero nested boxes) */}
-            <dl className="mt-7 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-neutral-200 pt-5 sm:grid-cols-3 lg:grid-cols-6 dark:border-neutral-800">
-              {[
-                { label: 'Ingestion', value: project.ingestionMode },
-                { label: 'Engine', value: project.computeEngine },
-                { label: 'Orchestration', value: project.orchestration },
-                { label: 'Sink', value: project.storageSink },
-                { label: 'Grain', value: project.grain },
-                { label: 'Cadence', value: project.sla },
-              ].map((spec) => (
-                <div key={spec.label}>
-                  <dt className="font-mono text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                    {spec.label}
-                  </dt>
-                  <dd className="mt-1 text-xs sm:text-sm font-medium text-neutral-950 dark:text-neutral-50">
-                    {spec.value}
-                  </dd>
-                </div>
-              ))}
-            </dl>
           </div>
 
-          {/* 2. Interactive Visual Lineage Flow */}
-          <div className="py-8">
-            <div className="mb-4 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-600 dark:text-neutral-400">
-                <GitBranch className="h-4 w-4" strokeWidth={1.8} />
-                <span>Pipeline Lineage</span>
+          {/* Sliding Visuals Gallery (ONLY shown when shared project images exist) */}
+          {images.length > 0 && currentImage && (
+            <div className="py-8">
+              <div className="mb-4 flex items-center justify-between">
+                <span className="font-mono text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
+                  Visual Walkthrough
+                </span>
+                <span className="font-mono text-xs text-neutral-500 dark:text-neutral-400">
+                  {slideIdx + 1} / {images.length}
+                </span>
               </div>
-              <span className="font-mono text-xs text-neutral-500">Click stage</span>
-            </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {project.architecture.map((node, idx) => {
-                const selected = idx === selectedStageIdx
-                return (
-                  <div key={node.layer} className="flex items-stretch gap-2">
+              <div className="relative overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100 dark:border-neutral-800 dark:bg-neutral-900">
+                <div className="aspect-video w-full overflow-hidden">
+                  <img
+                    src={currentImage.src}
+                    alt={currentImage.alt}
+                    className="h-full w-full object-contain bg-neutral-950/5 dark:bg-neutral-950"
+                  />
+                </div>
+
+                {/* Prev / Next Slider Controls */}
+                {images.length > 1 && (
+                  <>
                     <button
                       type="button"
-                      onClick={() => setSelectedStageIdx(idx)}
-                      className={`flex-1 rounded-lg p-4 text-left transition-colors ${
-                        selected
-                          ? 'bg-neutral-950 text-neutral-50 dark:bg-neutral-50 dark:text-neutral-950'
-                          : 'bg-neutral-100/80 text-neutral-900 hover:bg-neutral-200/70 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800'
-                      }`}
+                      onClick={() => goSlide(slideIdx - 1)}
+                      aria-label="Previous image"
+                      className="absolute top-1/2 left-3 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-neutral-200 bg-white/90 text-neutral-900 shadow-sm transition-colors hover:bg-white dark:border-neutral-700 dark:bg-neutral-900/90 dark:text-neutral-100 dark:hover:bg-neutral-900"
                     >
-                      <div
-                        className={`font-mono text-xs ${
-                          selected
-                            ? 'text-neutral-400 dark:text-neutral-600'
-                            : 'text-neutral-500 dark:text-neutral-400'
-                        }`}
-                      >
-                        {node.layer}
-                      </div>
-                      <div className="mt-1 text-sm font-semibold">{node.component}</div>
-                      <div
-                        className={`mt-2 inline-block rounded px-2 py-0.5 font-mono text-xs ${
-                          selected
-                            ? 'bg-neutral-800 text-neutral-200 dark:bg-neutral-200 dark:text-neutral-900'
-                            : 'bg-white text-neutral-600 dark:bg-neutral-950 dark:text-neutral-400'
-                        }`}
-                      >
-                        {node.format}
-                      </div>
+                      <ChevronLeft className="h-4 w-4" strokeWidth={1.8} />
                     </button>
-                    {idx < project.architecture.length - 1 && (
-                      <div className="hidden items-center text-neutral-400 lg:flex dark:text-neutral-600">
-                        <ArrowRight className="h-4 w-4" strokeWidth={1.6} />
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-
-            <div className="mt-4 flex flex-col justify-between gap-3 rounded-lg bg-neutral-100/70 p-4 sm:flex-row sm:items-center dark:bg-neutral-900/60">
-              <p className="text-sm text-neutral-700 dark:text-neutral-300">{activeStage.detail}</p>
-              <div className="flex flex-wrap gap-1.5">
-                {activeStage.tablesOrTopics.map((entity) => (
-                  <span
-                    key={entity}
-                    className="rounded bg-white px-2.5 py-1 font-mono text-xs text-neutral-800 dark:bg-neutral-950 dark:text-neutral-200"
-                  >
-                    {entity}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* 3. Visual ERD & Schema Contract */}
-          <div className="py-8">
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-600 dark:text-neutral-400">
-                <Table2 className="h-4 w-4" strokeWidth={1.8} />
-                <span>Schema &amp; Relationships</span>
-              </div>
-
-              <div className="inline-flex rounded-md bg-neutral-100 p-1 dark:bg-neutral-900">
-                <button
-                  type="button"
-                  onClick={() => setSchemaView('erd')}
-                  className={`rounded px-3 py-1 font-mono text-xs transition-colors ${
-                    schemaView === 'erd'
-                      ? 'bg-neutral-950 text-neutral-50 dark:bg-neutral-50 dark:text-neutral-950'
-                      : 'text-neutral-600 dark:text-neutral-400'
-                  }`}
-                >
-                  Visual ERD
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSchemaView('table')}
-                  className={`rounded px-3 py-1 font-mono text-xs transition-colors ${
-                    schemaView === 'table'
-                      ? 'bg-neutral-950 text-neutral-50 dark:bg-neutral-50 dark:text-neutral-950'
-                      : 'text-neutral-600 dark:text-neutral-400'
-                  }`}
-                >
-                  Contract Table
-                </button>
-              </div>
-            </div>
-
-            {schemaView === 'erd' ? (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {project.schemas.map((schema) => (
-                    <div
-                      key={schema.tableName}
-                      className="overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50/70 dark:border-neutral-800 dark:bg-neutral-900/50"
+                    <button
+                      type="button"
+                      onClick={() => goSlide(slideIdx + 1)}
+                      aria-label="Next image"
+                      className="absolute top-1/2 right-3 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-neutral-200 bg-white/90 text-neutral-900 shadow-sm transition-colors hover:bg-white dark:border-neutral-700 dark:bg-neutral-900/90 dark:text-neutral-100 dark:hover:bg-neutral-900"
                     >
-                      <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-100/80 px-4 py-2.5 dark:border-neutral-800 dark:bg-neutral-900">
-                        <span className="font-mono text-xs font-semibold text-neutral-950 dark:text-neutral-50">
-                          {schema.tableName}
-                        </span>
-                        <span className="font-mono text-xs text-neutral-500">{schema.layer}</span>
-                      </div>
+                      <ChevronRight className="h-4 w-4" strokeWidth={1.8} />
+                    </button>
+                  </>
+                )}
 
-                      <div className="divide-y divide-neutral-200/70 px-4 dark:divide-neutral-800/80">
-                        {schema.columns.map((col) => (
-                          <div
-                            key={col.name}
-                            className="flex items-center justify-between gap-2 py-2 font-mono text-xs"
-                          >
-                            <div className="flex items-center gap-2 truncate">
-                              {col.keyFlag && (
-                                <span
-                                  className={`rounded px-1.5 py-0.5 text-[11px] font-semibold ${
-                                    col.keyFlag === 'PK'
-                                      ? 'bg-neutral-950 text-neutral-50 dark:bg-neutral-50 dark:text-neutral-950'
-                                      : 'bg-neutral-200 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200'
-                                  }`}
-                                >
-                                  {col.keyFlag}
-                                </span>
-                              )}
-                              <span className="truncate text-neutral-900 dark:text-neutral-100">
-                                {col.name}
-                              </span>
-                            </div>
-                            <span className="shrink-0 text-neutral-500 dark:text-neutral-400">
-                              {col.type}
-                            </span>
+                {/* Circle-Exclamation Context Trigger (ONLY shown when context is available) */}
+                {currentImage.context && (
+                  <button
+                    type="button"
+                    onClick={() => setShowImageContext((prev) => !prev)}
+                    aria-label={showImageContext ? 'Hide image explanation' : 'Show image explanation'}
+                    title="Explain what is in this image"
+                    className={`absolute top-3 right-3 inline-flex h-8 w-8 items-center justify-center rounded-full border shadow-sm transition-colors ${
+                      showImageContext
+                        ? 'border-neutral-950 bg-neutral-950 text-neutral-50 dark:border-neutral-50 dark:bg-neutral-50 dark:text-neutral-950'
+                        : 'border-neutral-200 bg-white/95 text-neutral-900 hover:bg-white dark:border-neutral-700 dark:bg-neutral-900/95 dark:text-neutral-100 dark:hover:bg-neutral-900'
+                    }`}
+                  >
+                    <AlertCircle className="h-4 w-4" strokeWidth={1.9} />
+                  </button>
+                )}
+
+                {/* Image Explanation Drawer Overlay */}
+                {showImageContext && currentImage.context && (
+                  <div className="absolute inset-x-3 bottom-3 rounded-lg border border-neutral-200 bg-white/95 p-4 shadow-lg backdrop-blur-md dark:border-neutral-700 dark:bg-neutral-950/95">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        {currentImage.title && (
+                          <div className="font-mono text-xs font-semibold text-neutral-950 dark:text-neutral-50">
+                            {currentImage.title}
                           </div>
-                        ))}
+                        )}
+                        <p className="mt-1 text-xs sm:text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
+                          {currentImage.context}
+                        </p>
                       </div>
-
-                      <div className="border-t border-neutral-200 bg-white/60 px-4 py-2 font-mono text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-950/60 dark:text-neutral-400">
-                        {schema.partitionOrCluster}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {project.relations.length > 0 && (
-                  <div className="flex flex-wrap gap-3 pt-1">
-                    {project.relations.map((rel) => (
-                      <div
-                        key={`${rel.fromTable}.${rel.fromColumn}`}
-                        className="inline-flex items-center gap-2 rounded-md bg-neutral-100 px-3 py-1.5 font-mono text-xs text-neutral-800 dark:bg-neutral-900 dark:text-neutral-200"
+                      <button
+                        type="button"
+                        onClick={() => setShowImageContext(false)}
+                        aria-label="Close image explanation"
+                        className="rounded p-1 text-neutral-500 hover:text-neutral-950 dark:hover:text-neutral-50"
                       >
-                        <span>
-                          {rel.fromTable}.{rel.fromColumn}
-                        </span>
-                        <ArrowRight className="h-3.5 w-3.5 text-neutral-500" strokeWidth={1.8} />
-                        <span>
-                          {rel.toTable}.{rel.toColumn}
-                        </span>
-                        <span className="rounded bg-neutral-200 px-1.5 py-0.5 text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100">
-                          {rel.cardinality}
-                        </span>
-                      </div>
-                    ))}
+                        <X className="h-3.5 w-3.5" strokeWidth={1.8} />
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
-            ) : (
-              <div className="overflow-x-auto rounded-lg border border-neutral-200 dark:border-neutral-800">
-                <table className="w-full border-collapse text-left">
-                  <thead>
-                    <tr className="border-b border-neutral-200 bg-neutral-50 font-mono text-xs uppercase tracking-wider text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
-                      <th className="px-4 py-3">Table</th>
-                      <th className="px-4 py-3">PK</th>
-                      <th className="px-4 py-3">Physical Layout</th>
-                      <th className="px-4 py-3">Write Mode</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-neutral-200 text-xs sm:text-sm dark:divide-neutral-800">
-                    {project.schemas.map((schema) => (
-                      <tr key={schema.tableName}>
-                        <td className="px-4 py-3 font-mono font-medium text-neutral-950 dark:text-neutral-50">
-                          {schema.tableName}
-                        </td>
-                        <td className="px-4 py-3 font-mono text-neutral-700 dark:text-neutral-300">
-                          {schema.primaryKey}
-                        </td>
-                        <td className="px-4 py-3 font-mono text-neutral-600 dark:text-neutral-400">
-                          {schema.partitionOrCluster}
-                        </td>
-                        <td className="px-4 py-3 text-neutral-700 dark:text-neutral-300">
-                          {schema.updateMode}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
 
-          {/* 4. Quality Gates Assertion Matrix + Transformation Code */}
-          <div className="grid grid-cols-1 gap-8 py-8 lg:grid-cols-12">
-            <div className="lg:col-span-6">
-              <div className="mb-3 flex items-center justify-between">
-                <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-600 dark:text-neutral-400">
-                  <Code2 className="h-4 w-4" strokeWidth={1.8} />
-                  <span>{project.codeSnippet.filename}</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={copySnippet}
-                  className="inline-flex items-center gap-1 rounded-md bg-neutral-100 px-2.5 py-1 font-mono text-xs text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800"
-                >
-                  {copiedCode ? (
-                    <>
-                      <Check className="h-3.5 w-3.5" strokeWidth={1.8} />
-                      <span>Copied</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-3.5 w-3.5" strokeWidth={1.8} />
-                      <span>Copy</span>
-                    </>
+              {(currentImage.title || images.length > 1) && (
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                  <span className="font-mono text-xs text-neutral-600 dark:text-neutral-400">
+                    {currentImage.title ?? currentImage.alt}
+                  </span>
+
+                  {images.length > 1 && (
+                    <div className="flex items-center gap-1.5">
+                      {images.map((img, i) => (
+                        <button
+                          key={img.src + i}
+                          type="button"
+                          onClick={() => goSlide(i)}
+                          aria-label={`View slide ${i + 1}`}
+                          className={`h-2 rounded-full transition-all ${
+                            i === slideIdx
+                              ? 'w-5 bg-neutral-950 dark:bg-neutral-50'
+                              : 'w-2 bg-neutral-300 hover:bg-neutral-400 dark:bg-neutral-700 dark:hover:bg-neutral-600'
+                          }`}
+                        />
+                      ))}
+                    </div>
                   )}
-                </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 01 // Challenge & Approach */}
+          <div className="grid grid-cols-1 gap-8 py-8 md:grid-cols-2">
+            <div>
+              <div className="mb-3 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
+                <Target className="h-4 w-4" strokeWidth={1.8} />
+                <span>01 // The Challenge</span>
               </div>
-              <pre className="overflow-x-auto rounded-lg bg-neutral-100/80 p-4 font-mono text-xs leading-relaxed text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100">
-                <code>{project.codeSnippet.content}</code>
-              </pre>
+              <p className="text-sm sm:text-base leading-relaxed text-neutral-700 dark:text-neutral-300">
+                {project.wiki.problem}
+              </p>
             </div>
 
-            <div className="lg:col-span-6">
-              <div className="mb-3 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-600 dark:text-neutral-400">
-                <ShieldCheck className="h-4 w-4" strokeWidth={1.8} />
-                <span>Quality Gates</span>
+            <div>
+              <div className="mb-3 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
+                <Compass className="h-4 w-4" strokeWidth={1.8} />
+                <span>02 // Approach</span>
               </div>
-              <div className="overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
-                <table className="w-full border-collapse text-left">
-                  <thead>
-                    <tr className="border-b border-neutral-200 bg-neutral-50 font-mono text-[11px] uppercase tracking-wider text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
-                      <th className="px-3.5 py-2.5">Boundary</th>
-                      <th className="px-3.5 py-2.5">Contract</th>
-                      <th className="px-3.5 py-2.5">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-neutral-200 text-xs dark:divide-neutral-800">
-                    {project.qualityGates.map((gate) => (
-                      <tr key={gate.contract}>
-                        <td className="whitespace-nowrap px-3.5 py-3 font-mono text-neutral-600 dark:text-neutral-400">
-                          {gate.boundary}
-                        </td>
-                        <td className="px-3.5 py-3 font-mono font-medium text-neutral-950 dark:text-neutral-50">
-                          {gate.contract}
-                        </td>
-                        <td className="px-3.5 py-3 text-neutral-700 dark:text-neutral-300">
-                          {gate.enforcement}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <p className="text-sm sm:text-base leading-relaxed text-neutral-700 dark:text-neutral-300">
+                {project.wiki.solution}
+              </p>
             </div>
           </div>
 
-          {/* 5. Architecture Decisions & Outcomes */}
-          <div className="grid grid-cols-1 gap-8 py-8 lg:grid-cols-2">
+          {/* 03 // How It Works (Narrative Stages) */}
+          <div className="py-8">
+            <div className="mb-5 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
+              <Workflow className="h-4 w-4" strokeWidth={1.8} />
+              <span>03 // How It Works</span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {project.wiki.workflow.map((stage) => (
+                <div
+                  key={stage.step}
+                  className="rounded-lg border border-neutral-200 bg-neutral-50/70 p-4 sm:p-5 dark:border-neutral-800 dark:bg-neutral-900/50"
+                >
+                  <div className="flex items-center justify-between font-mono text-xs text-neutral-500 dark:text-neutral-400">
+                    <span>STAGE {stage.step}</span>
+                  </div>
+                  <h2 className="mt-1.5 text-base font-semibold text-neutral-950 dark:text-neutral-50">
+                    {stage.title}
+                  </h2>
+                  <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">
+                    {stage.summary}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {stage.tools.map((tool) => (
+                      <span
+                        key={tool}
+                        className="rounded bg-white px-2 py-0.5 font-mono text-xs text-neutral-700 dark:bg-neutral-950 dark:text-neutral-300"
+                      >
+                        {tool}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 04 // Key Decisions & Outcomes */}
+          <div className="grid grid-cols-1 gap-8 py-8 md:grid-cols-2">
             <div>
-              <div className="mb-3 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-600 dark:text-neutral-400">
+              <div className="mb-3 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
                 <Layers className="h-4 w-4" strokeWidth={1.8} />
-                <span>Architecture Decisions</span>
+                <span>04 // Key Decisions</span>
               </div>
               <dl className="space-y-4">
                 {project.decisions.map((d) => (
@@ -451,11 +350,11 @@ export function ProjectDetailModalPage({
             </div>
 
             <div>
-              <div className="mb-3 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-600 dark:text-neutral-400">
-                <Database className="h-4 w-4" strokeWidth={1.8} />
-                <span>Impact</span>
+              <div className="mb-3 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
+                <CheckCircle2 className="h-4 w-4" strokeWidth={1.8} />
+                <span>05 // Outcomes &amp; Tools</span>
               </div>
-              <ul className="space-y-3">
+              <ul className="space-y-2.5">
                 {project.impact.map((item) => (
                   <li
                     key={item}
@@ -469,6 +368,17 @@ export function ProjectDetailModalPage({
                   </li>
                 ))}
               </ul>
+
+              <div className="mt-5 flex flex-wrap gap-1.5 border-t border-neutral-200 pt-4 dark:border-neutral-800">
+                {project.stack.map((tech) => (
+                  <span
+                    key={tech}
+                    className="rounded bg-neutral-100 px-2.5 py-1 font-mono text-xs text-neutral-800 dark:bg-neutral-900 dark:text-neutral-200"
+                  >
+                    {tech}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
 

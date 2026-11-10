@@ -1,17 +1,16 @@
 import { useState } from 'react'
-import { Award, Briefcase, GraduationCap, MapPin } from 'lucide-react'
-import { CREDENTIALS, EDUCATION, EXPERIENCES } from '../data/portfolio'
+import { Briefcase, GraduationCap, MapPin } from 'lucide-react'
+import { EDUCATION, EXPERIENCES } from '../data/portfolio'
 
-type LogFilter = 'All' | 'Experience' | 'Education' | 'Credentials'
+type LogFilter = 'All' | 'Experience' | 'Education'
 
-const FILTERS: LogFilter[] = ['All', 'Experience', 'Education', 'Credentials']
+const FILTERS: LogFilter[] = ['All', 'Experience', 'Education']
 
 export function ExperiencePage() {
   const [filter, setFilter] = useState<LogFilter>('All')
 
   const showExperience = filter === 'All' || filter === 'Experience'
   const showEducation = filter === 'All' || filter === 'Education'
-  const showCredentials = filter === 'All' || filter === 'Credentials'
 
   return (
     <section className="py-10 sm:py-14">
@@ -145,36 +144,6 @@ export function ExperiencePage() {
                           </li>
                         ))}
                       </ul>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {showCredentials && (
-              <div>
-                <div className="mb-4 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
-                  <Award className="h-3.5 w-3.5" strokeWidth={1.8} />
-                  <span>Certifications &amp; Honors</span>
-                </div>
-
-                <div className="divide-y divide-neutral-200 rounded-xl border border-neutral-200 bg-white dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-900/50">
-                  {CREDENTIALS.map((cred) => (
-                    <div
-                      key={cred.id}
-                      className="flex flex-wrap items-center justify-between gap-3 px-6 py-4"
-                    >
-                      <div>
-                        <div className="text-sm font-medium text-neutral-950 dark:text-neutral-50">
-                          {cred.title}
-                        </div>
-                        <div className="mt-0.5 text-xs text-neutral-600 dark:text-neutral-400">
-                          {cred.issuer} · {cred.category}
-                        </div>
-                      </div>
-                      <span className="font-mono text-xs text-neutral-500 dark:text-neutral-400">
-                        {cred.year}
-                      </span>
                     </div>
                   ))}
                 </div>

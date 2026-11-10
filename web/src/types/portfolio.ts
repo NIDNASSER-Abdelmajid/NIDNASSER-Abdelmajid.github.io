@@ -1,51 +1,40 @@
 export type ProjectCategory = 'All' | 'Lakehouse & ETL' | 'Streaming' | 'Crawling & Extraction'
 
-export interface PipelineStage {
-  id: 'sources' | 'ingest' | 'lakehouse' | 'serve'
+export type ArchitectureModeId = 'batch' | 'streaming' | 'extraction' | 'analytics'
+
+export interface ArchitectureStage {
+  id: string
   step: string
+  role: string
   label: string
-  subtitle: string
-  engines: string[]
-  pattern: string
-  contract: string
-  snippet: string
+  tools: string[]
+  guarantee: string
+  description: string
 }
 
-export interface ProjectArchitectureNode {
-  layer: string
-  component: string
-  format: string
-  tablesOrTopics: string[]
-  detail: string
+export interface ArchitectureBlueprint {
+  id: ArchitectureModeId
+  label: string
+  shortLabel: string
+  headline: string
+  inputs: string[]
+  guardLabel: string
+  outputs: string[]
+  stages: [ArchitectureStage, ArchitectureStage, ArchitectureStage, ArchitectureStage]
 }
 
-export interface ProjectSchemaColumn {
-  name: string
-  type: string
-  keyFlag?: 'PK' | 'FK' | 'CLUSTER'
+export interface ProjectImage {
+  src: string
+  alt: string
+  title?: string
+  context?: string
 }
 
-export interface ProjectTableSchema {
-  tableName: string
-  layer: 'Source' | 'Bronze' | 'Silver' | 'Gold' | 'Stream' | 'Serving'
-  primaryKey: string
-  partitionOrCluster: string
-  updateMode: string
-  columns: ProjectSchemaColumn[]
-}
-
-export interface ProjectSchemaRelation {
-  fromTable: string
-  fromColumn: string
-  toTable: string
-  toColumn: string
-  cardinality: string
-}
-
-export interface ProjectQualityGate {
-  boundary: string
-  contract: string
-  enforcement: string
+export interface ProjectWorkflowStep {
+  step: string
+  title: string
+  summary: string
+  tools: string[]
 }
 
 export interface ProjectDecision {
@@ -61,23 +50,15 @@ export interface ProjectItem {
   year: string
   context: string
   summary: string
-  ingestionMode: string
-  computeEngine: string
-  orchestration: string
-  storageSink: string
-  grain: string
-  sla: string
   impact: string[]
   stack: string[]
   repoUrl?: string
-  architecture: ProjectArchitectureNode[]
-  schemas: ProjectTableSchema[]
-  relations: ProjectSchemaRelation[]
-  qualityGates: ProjectQualityGate[]
-  codeSnippet: {
-    filename: string
-    language: string
-    content: string
+  articleSlug?: string
+  images?: ProjectImage[]
+  wiki: {
+    problem: string
+    solution: string
+    workflow: ProjectWorkflowStep[]
   }
   decisions: ProjectDecision[]
 }
@@ -108,6 +89,10 @@ export interface CredentialItem {
   issuer: string
   year: string
   category: 'Certification' | 'Recognition'
+  summary?: string
+  credentialUrl?: string
+  imageUrl?: string
+  imageAlt?: string
 }
 
 export interface StackRow {
@@ -117,14 +102,45 @@ export interface StackRow {
   technology: string
 }
 
+export interface BlogImage {
+  src: string
+  alt: string
+  caption?: string
+  context?: string
+}
+
+export type BlogEmbed =
+  | {
+      type: 'iframe'
+      title: string
+      src: string
+      aspectRatio?: '16/9' | '4/3' | 'tall'
+      caption?: string
+    }
+  | {
+      type: 'link'
+      title: string
+      url: string
+      source: string
+      description?: string
+    }
+  | {
+      type: 'callout'
+      label: string
+      title: string
+      body: string
+    }
+
 export interface BlogSection {
   heading: string
   paragraphs: string[]
+  bullets?: string[]
   code?: {
     label: string
     content: string
   }
-  bullets?: string[]
+  images?: BlogImage[]
+  embeds?: BlogEmbed[]
 }
 
 export interface BlogPost {
@@ -134,7 +150,6 @@ export interface BlogPost {
   topic: 'Lakehouse' | 'ETL & Ingestion' | 'Data Modeling'
   publishedAt: string
   readTime: string
-  views: number
   excerpt: string
   tags: string[]
   sections: BlogSection[]

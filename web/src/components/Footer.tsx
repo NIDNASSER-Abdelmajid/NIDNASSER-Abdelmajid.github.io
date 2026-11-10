@@ -27,6 +27,13 @@ export function Footer({ onNavigate }: FooterProps) {
           </button>
           <button
             type="button"
+            onClick={() => onNavigate('/credentials')}
+            className="hover:text-neutral-950 dark:hover:text-neutral-50"
+          >
+            Credentials
+          </button>
+          <button
+            type="button"
             onClick={() => onNavigate('/blog')}
             className="hover:text-neutral-950 dark:hover:text-neutral-50"
           >

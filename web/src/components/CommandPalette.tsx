@@ -78,6 +78,17 @@ export function CommandPalette({
         },
       },
       {
+        id: 'nav-credentials',
+        group: 'Pages',
+        label: 'Credentials & Certifications',
+        hint: '/credentials',
+        icon: ArrowRight,
+        action: () => {
+          onNavigate('/credentials')
+          onClose()
+        },
+      },
+      {
         id: 'nav-stack',
         group: 'Pages',
         label: 'SQL Tech Stack Matrix',

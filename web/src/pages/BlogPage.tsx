@@ -1,35 +1,33 @@
 import { useEffect, useState } from 'react'
 import {
+  AlertCircle,
   ArrowLeft,
   ArrowRight,
+  ArrowUpRight,
   BookOpen,
   Calendar,
   Check,
   Clock,
   Code2,
   Copy,
+  ExternalLink,
   Eye,
+  Maximize2,
   Search,
+  X,
 } from 'lucide-react'
 import { BLOG_POSTS } from '../data/blog'
-import type { BlogPost } from '../types/portfolio'
+import { useBlogReads } from '../hooks/useBlogReads'
+import type { BlogImage, BlogPost } from '../types/portfolio'
 
 type TopicFilter = 'All' | BlogPost['topic']
 
 const TOPICS: TopicFilter[] = ['All', 'Lakehouse', 'ETL & Ingestion', 'Data Modeling']
-const VIEWS_STORAGE_KEY = 'blog-post-views-v1'
+const POST_SLUGS = BLOG_POSTS.map((p) => p.slug)
 
-function getInitialViewMap(): Record<string, number> {
-  const defaults = Object.fromEntries(BLOG_POSTS.map((p) => [p.slug, p.views]))
-  if (typeof window === 'undefined') return defaults
-  try {
-    const raw = window.localStorage.getItem(VIEWS_STORAGE_KEY)
-    if (!raw) return defaults
-    const parsed = JSON.parse(raw) as Record<string, number>
-    return { ...defaults, ...parsed }
-  } catch {
-    return defaults
-  }
+function formatReadsLabel(count: number | null): string {
+  if (count === null) return '...'
+  return `${count.toLocaleString()} ${count === 1 ? 'read' : 'reads'}`
 }
 
 interface BlogPageProps {
@@ -41,38 +39,35 @@ export function BlogPage({ activeSlug, onNavigate }: BlogPageProps) {
   const [topic, setTopic] = useState<TopicFilter>('All')
   const [query, setQuery] = useState('')
   const [copiedCodeKey, setCopiedCodeKey] = useState<string | null>(null)
-  const [viewsMap, setViewsMap] = useState<Record<string, number>>(() => getInitialViewMap())
+  const [openContextMap, setOpenContextMap] = useState<Record<string, boolean>>({})
+  const [zoomedImage, setZoomedImage] = useState<BlogImage | null>(null)
+
+  const readsMap = useBlogReads(POST_SLUGS, activeSlug)
 
   useEffect(() => {
-    if (!activeSlug) return
-    const sessionKey = `viewed-${activeSlug}`
-    try {
-      if (window.sessionStorage.getItem(sessionKey)) return
-      window.sessionStorage.setItem(sessionKey, '1')
-    } catch {
-      // ignore session storage errors
-    }
-
-    setViewsMap((prev) => {
-      const next = {
-        ...prev,
-        [activeSlug]: (prev[activeSlug] ?? 0) + 1,
-      }
-      try {
-        window.localStorage.setItem(VIEWS_STORAGE_KEY, JSON.stringify(next))
-      } catch {
-        // ignore storage errors
-      }
-      return next
-    })
+    setOpenContextMap({})
+    setZoomedImage(null)
   }, [activeSlug])
+
+  useEffect(() => {
+    if (!zoomedImage) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setZoomedImage(null)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [zoomedImage])
+
+  const toggleImageContext = (key: string) => {
+    setOpenContextMap((prev) => ({ ...prev, [key]: !prev[key] }))
+  }
 
   if (activeSlug) {
     const idx = BLOG_POSTS.findIndex((p) => p.slug === activeSlug)
     const post = idx >= 0 ? BLOG_POSTS[idx] : BLOG_POSTS[0]
     const prevPost = idx > 0 ? BLOG_POSTS[idx - 1] : null
     const nextPost = idx < BLOG_POSTS.length - 1 ? BLOG_POSTS[idx + 1] : null
-    const postViews = viewsMap[post.slug] ?? post.views
+    const postReads = readsMap[post.slug] ?? null
 
     const copyCode = (label: string, content: string) => {
       navigator.clipboard?.writeText(content).catch(() => {})
@@ -106,9 +101,12 @@ export function BlogPage({ activeSlug, onNavigate }: BlogPageProps) {
                 {post.readTime}
               </span>
               <span>·</span>
-              <span className="inline-flex items-center gap-1">
+              <span
+                title="Live global count of engaged reads"
+                className="inline-flex items-center gap-1"
+              >
                 <Eye className="h-3.5 w-3.5" strokeWidth={1.8} />
-                {postViews.toLocaleString()} views
+                {formatReadsLabel(postReads)}
               </span>
             </div>
           </div>
@@ -126,11 +124,12 @@ export function BlogPage({ activeSlug, onNavigate }: BlogPageProps) {
           </header>
 
           <div className="mt-10 space-y-10">
-            {post.sections.map((section) => (
-              <section key={section.heading} className="space-y-4">
+            {post.sections.map((section, sectionIdx) => (
+              <section key={section.heading} className="space-y-5">
                 <h2 className="text-xl font-semibold tracking-tight text-neutral-950 dark:text-neutral-50">
                   {section.heading}
                 </h2>
+
                 {section.paragraphs.map((p) => (
                   <p
                     key={p}
@@ -139,6 +138,7 @@ export function BlogPage({ activeSlug, onNavigate }: BlogPageProps) {
                     {p}
                   </p>
                 ))}
+
                 {section.bullets && (
                   <ul className="space-y-2 border-l-2 border-neutral-300 pl-4 dark:border-neutral-700">
                     {section.bullets.map((bullet) => (
@@ -151,6 +151,163 @@ export function BlogPage({ activeSlug, onNavigate }: BlogPageProps) {
                     ))}
                   </ul>
                 )}
+
+                {section.images && section.images.length > 0 && (
+                  <div className="space-y-4">
+                    {section.images.map((img, imgIdx) => {
+                      const imgKey = `${sectionIdx}-${imgIdx}`
+                      const contextOpen = Boolean(openContextMap[imgKey])
+                      return (
+                        <figure
+                          key={img.src + imgIdx}
+                          className="overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100/70 dark:border-neutral-800 dark:bg-neutral-900"
+                        >
+                          <div className="relative">
+                            <img
+                              src={img.src}
+                              alt={img.alt}
+                              loading="lazy"
+                              className="max-h-[480px] w-full object-contain bg-neutral-950/5 dark:bg-neutral-950"
+                            />
+                            <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                              {img.context && (
+                                <button
+                                  type="button"
+                                  onClick={() => toggleImageContext(imgKey)}
+                                  aria-label={contextOpen ? 'Hide image context' : 'Explain image'}
+                                  className={`inline-flex h-8 w-8 items-center justify-center rounded-full border shadow-sm transition-colors ${
+                                    contextOpen
+                                      ? 'border-neutral-950 bg-neutral-950 text-neutral-50 dark:border-neutral-50 dark:bg-neutral-50 dark:text-neutral-950'
+                                      : 'border-neutral-200 bg-white/95 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900/95 dark:text-neutral-100'
+                                  }`}
+                                >
+                                  <AlertCircle className="h-4 w-4" strokeWidth={1.8} />
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => setZoomedImage(img)}
+                                aria-label="Expand image"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white/95 text-neutral-900 shadow-sm dark:border-neutral-700 dark:bg-neutral-900/95 dark:text-neutral-100"
+                              >
+                                <Maximize2 className="h-3.5 w-3.5" strokeWidth={1.8} />
+                              </button>
+                            </div>
+
+                            {contextOpen && img.context && (
+                              <div className="border-t border-neutral-200 bg-white p-4 text-xs sm:text-sm leading-relaxed text-neutral-700 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-300">
+                                {img.context}
+                              </div>
+                            )}
+                          </div>
+                          {img.caption && (
+                            <figcaption className="border-t border-neutral-200 px-4 py-2.5 font-mono text-xs text-neutral-600 dark:border-neutral-800 dark:text-neutral-400">
+                              {img.caption}
+                            </figcaption>
+                          )}
+                        </figure>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {section.embeds && section.embeds.length > 0 && (
+                  <div className="space-y-4">
+                    {section.embeds.map((embed, embedIdx) => {
+                      if (embed.type === 'callout') {
+                        return (
+                          <div
+                            key={`${embed.title}-${embedIdx}`}
+                            className="rounded-lg border border-neutral-200 bg-neutral-100/80 p-4 dark:border-neutral-800 dark:bg-neutral-900"
+                          >
+                            <div className="font-mono text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                              {embed.label}
+                            </div>
+                            <div className="mt-1 text-sm font-semibold text-neutral-950 dark:text-neutral-50">
+                              {embed.title}
+                            </div>
+                            <p className="mt-1.5 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
+                              {embed.body}
+                            </p>
+                          </div>
+                        )
+                      }
+
+                      if (embed.type === 'link') {
+                        return (
+                          <a
+                            key={`${embed.url}-${embedIdx}`}
+                            href={embed.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="group flex items-start justify-between gap-4 rounded-lg border border-neutral-200 bg-white p-4 transition-colors hover:border-neutral-950 dark:border-neutral-800 dark:bg-neutral-900/60 dark:hover:border-neutral-400"
+                          >
+                            <div>
+                              <div className="inline-flex items-center gap-1.5 font-mono text-xs text-neutral-500 dark:text-neutral-400">
+                                <ExternalLink className="h-3 w-3" strokeWidth={1.8} />
+                                <span>{embed.source}</span>
+                              </div>
+                              <div className="mt-1 text-sm font-semibold text-neutral-950 dark:text-neutral-50">
+                                {embed.title}
+                              </div>
+                              {embed.description && (
+                                <p className="mt-1 text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">
+                                  {embed.description}
+                                </p>
+                              )}
+                            </div>
+                            <ArrowUpRight
+                              className="mt-1 h-4 w-4 shrink-0 text-neutral-400 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-neutral-950 dark:group-hover:text-neutral-50"
+                              strokeWidth={1.8}
+                            />
+                          </a>
+                        )
+                      }
+
+                      const ratioClass =
+                        embed.aspectRatio === 'tall'
+                          ? 'h-[480px]'
+                          : embed.aspectRatio === '4/3'
+                            ? 'aspect-[4/3]'
+                            : 'aspect-video'
+
+                      return (
+                        <figure
+                          key={`${embed.src}-${embedIdx}`}
+                          className="overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900"
+                        >
+                          <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-2.5 dark:border-neutral-800">
+                            <span className="font-mono text-xs text-neutral-700 dark:text-neutral-300">
+                              {embed.title}
+                            </span>
+                            <a
+                              href={embed.src}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 font-mono text-xs text-neutral-500 hover:text-neutral-950 dark:hover:text-neutral-50"
+                            >
+                              <span>Open</span>
+                              <ArrowUpRight className="h-3 w-3" strokeWidth={1.8} />
+                            </a>
+                          </div>
+                          <iframe
+                            src={embed.src}
+                            title={embed.title}
+                            loading="lazy"
+                            allowFullScreen
+                            className={`w-full border-0 ${ratioClass}`}
+                          />
+                          {embed.caption && (
+                            <figcaption className="border-t border-neutral-200 px-4 py-2.5 font-mono text-xs text-neutral-600 dark:border-neutral-800 dark:text-neutral-400">
+                              {embed.caption}
+                            </figcaption>
+                          )}
+                        </figure>
+                      )
+                    })}
+                  </div>
+                )}
+
                 {section.code && (
                   <div className="overflow-hidden rounded-lg bg-neutral-100/80 dark:bg-neutral-900">
                     <div className="flex items-center justify-between border-b border-neutral-200/80 px-4 py-2.5 dark:border-neutral-800">
@@ -212,6 +369,41 @@ export function BlogPage({ activeSlug, onNavigate }: BlogPageProps) {
             </div>
           </div>
         </div>
+
+        {/* Zoomed Blog Image Modal */}
+        {zoomedImage && (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={zoomedImage.alt}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/85 p-4 backdrop-blur-xs"
+            onClick={() => setZoomedImage(null)}
+          >
+            <div
+              className="relative max-w-4xl overflow-hidden rounded-xl border border-neutral-700 bg-neutral-950 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setZoomedImage(null)}
+                aria-label="Close expanded image"
+                className="absolute top-3 right-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-neutral-900/90 text-neutral-100 hover:bg-neutral-800"
+              >
+                <X className="h-4 w-4" strokeWidth={1.8} />
+              </button>
+              <img
+                src={zoomedImage.src}
+                alt={zoomedImage.alt}
+                className="max-h-[82vh] w-auto object-contain"
+              />
+              {zoomedImage.caption && (
+                <div className="border-t border-neutral-800 px-4 py-2.5 font-mono text-xs text-neutral-300">
+                  {zoomedImage.caption}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </article>
     )
   }
@@ -234,7 +426,7 @@ export function BlogPage({ activeSlug, onNavigate }: BlogPageProps) {
           <div>
             <div className="mb-2 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
               <BookOpen className="h-3.5 w-3.5" strokeWidth={1.8} />
-              <span>04 // Engineering Notes</span>
+              <span>05 // Engineering Notes</span>
             </div>
             <h1 className="text-3xl font-semibold tracking-tight text-neutral-950 sm:text-4xl dark:text-neutral-50">
               Blog
@@ -289,7 +481,7 @@ export function BlogPage({ activeSlug, onNavigate }: BlogPageProps) {
             </div>
           ) : (
             filteredPosts.map((post) => {
-              const postViews = viewsMap[post.slug] ?? post.views
+              const postReads = readsMap[post.slug] ?? null
               return (
                 <article
                   key={post.slug}
@@ -309,9 +501,12 @@ export function BlogPage({ activeSlug, onNavigate }: BlogPageProps) {
                       <span>·</span>
                       <span>{post.readTime}</span>
                       <span>·</span>
-                      <span className="inline-flex items-center gap-1">
+                      <span
+                        title="Live global count of engaged reads"
+                        className="inline-flex items-center gap-1"
+                      >
                         <Eye className="h-3.5 w-3.5" strokeWidth={1.8} />
-                        {postViews.toLocaleString()} views
+                        {formatReadsLabel(postReads)}
                       </span>
                     </div>
                   </div>

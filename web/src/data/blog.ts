@@ -1,5 +1,7 @@
 import type { BlogPost } from '../types/portfolio'
 
+// Blog sections support: paragraphs, bullets, code, images (src, alt, caption, context),
+// and embeds (type: 'iframe' | 'link' | 'callout').
 export const BLOG_POSTS: BlogPost[] = [
   {
     slug: 'idempotent-cdc-medallion-lakehouse',
@@ -8,7 +10,6 @@ export const BLOG_POSTS: BlogPost[] = [
     topic: 'Lakehouse',
     publishedAt: '2026-10-18',
     readTime: '4 min read',
-    views: 428,
     excerpt:
       'Keeping Bronze-to-Silver Delta merges deterministic across retries using batch watermarks and QUALIFY ranking.',
     tags: ['Databricks', 'Delta Lake', 'CDC', 'SQL'],
@@ -17,6 +18,14 @@ export const BLOG_POSTS: BlogPost[] = [
         heading: 'Why Incremental Retries Break Warehouses',
         paragraphs: [
           'Naive incremental loads fail when a pipeline restarts mid-batch or upstream OLTP replays duplicate events, causing double-counted metrics or Delta MERGE conflicts.',
+        ],
+        embeds: [
+          {
+            type: 'callout',
+            label: 'Invariant',
+            title: 'Advance Watermarks Post-Commit Only',
+            body: 'Never update ingestion state before the target transaction commits. Separating Bronze raw append from Silver MERGE lets failed runs replay safely without duplicates.',
+          },
         ],
       },
       {
@@ -53,7 +62,6 @@ WHEN NOT MATCHED THEN INSERT *;`,
     topic: 'ETL & Ingestion',
     publishedAt: '2026-09-29',
     readTime: '4 min read',
-    views: 314,
     excerpt:
       'Decoupling noisy headless web capture from CPU-heavy OCR and PySpark deduplication via Parquet checkpoints.',
     tags: ['Apache Spark', 'Python', 'Crawlers', 'Data Quality'],
@@ -62,6 +70,16 @@ WHEN NOT MATCHED THEN INSERT *;`,
         heading: 'Decouple Acquisition from Heavy Enrichment',
         paragraphs: [
           'Network timeouts and rate limits are normal across 100K+ domains. Flushing raw DOM and HAR captures to sharded Parquet checkpoints isolates crawler retries from downstream Spark jobs.',
+        ],
+        embeds: [
+          {
+            type: 'link',
+            source: 'GitHub Repository',
+            title: 'crawler-addisclosure',
+            url: 'https://github.com/NIDNASSER-Abdelmajid/crawler-addisclosure',
+            description:
+              'Crawler and pipeline implementation capturing DOM trees, network headers, and disclosure telemetry.',
+          },
         ],
       },
       {
@@ -88,7 +106,6 @@ WHEN NOT MATCHED THEN INSERT *;`,
     topic: 'Data Modeling',
     publishedAt: '2026-08-14',
     readTime: '3 min read',
-    views: 269,
     excerpt:
       'Unifying Salesforce, Odoo, and SAP starts with conformed client crosswalks and automated GL reconciliation.',
     tags: ['SQL', 'Star Schema', 'Modeling', 'BI'],
@@ -102,6 +119,15 @@ WHEN NOT MATCHED THEN INSERT *;`,
           'Declare exact fact grain first (1 row per invoice line)',
           'Retain native ERP keys alongside surrogate keys for audits',
           'Centralize KPI logic in SQL marts rather than scattered BI formulas',
+        ],
+        embeds: [
+          {
+            type: 'link',
+            source: 'GitHub Repository',
+            title: 'SALES-ANALYTICS-DASHBOARD',
+            url: 'https://github.com/NIDNASSER-Abdelmajid/SALES-ANALYTICS-DASHBOARD',
+            description: 'Analytical warehousing models and revenue KPIs across sales dimensions.',
+          },
         ],
       },
       {
