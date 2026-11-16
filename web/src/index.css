@@ -39,12 +39,29 @@
   animation: pipeline-dash 1.2s linear infinite;
 }
 
+.horizontal-canvas-track {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  height: 100%;
+  width: 700vw;
+  will-change: transform;
+  transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.is-dormant .animate-pipeline-flow {
+  animation: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
   .animate-pipeline-flow {
     animation: none;
+  }
+  .horizontal-canvas-track {
+    transition: none !important;
   }
 }
 

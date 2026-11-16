@@ -2,6 +2,15 @@ import { ArrowUp } from 'lucide-react'
 import { PROFILE } from '../data/portfolio'
 
 export function Footer() {
+  const scrollToTop = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const scrollContainer = e.currentTarget.closest('.overflow-y-auto')
+    if (scrollContainer) {
+      scrollContainer.scrollTo({ top: 0, behavior: 'smooth' })
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
   return (
     <footer className="border-t border-neutral-200 py-6 dark:border-neutral-800">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 font-mono text-xs text-neutral-500 sm:px-8 dark:text-neutral-400">
@@ -15,7 +24,7 @@ export function Footer() {
 
         <button
           type="button"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          onClick={scrollToTop}
           aria-label="Back to top"
           className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded border border-neutral-200 bg-white text-neutral-600 transition-colors hover:border-neutral-950 hover:text-neutral-950 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-50 dark:hover:text-neutral-50"
         >

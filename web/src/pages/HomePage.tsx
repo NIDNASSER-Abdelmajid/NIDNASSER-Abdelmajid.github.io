@@ -11,7 +11,7 @@ interface HomePageProps {
 
 export function HomePage({ copied, onCopyEmail, onNavigate }: HomePageProps) {
   return (
-    <section className="bg-blueprint-grid flex min-h-[calc(100vh-8rem)] items-center py-10 @2xl:py-16">
+    <section className="flex min-h-[calc(100vh-8rem)] items-center py-10 @2xl:py-16">
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-8">
         <div className="grid grid-cols-1 items-center gap-10 @5xl:grid-cols-12 @5xl:gap-12">
           <div className="@5xl:col-span-5">

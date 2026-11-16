@@ -208,12 +208,12 @@ export function Sidebar({
   return (
     <>
       {/* Desktop Left Vertical Navigation Rail */}
-      <aside className="hidden md:sticky md:top-0 md:flex md:h-screen md:w-60 md:shrink-0 md:flex-col md:border-r md:border-neutral-200 md:bg-neutral-50/95 lg:w-64 dark:md:border-neutral-800 dark:md:bg-neutral-950/95">
+      <aside className="hidden md:fixed md:top-0 md:left-0 md:bottom-0 md:z-30 md:flex md:h-screen md:w-60 md:flex-col md:border-r md:border-neutral-200/80 md:bg-neutral-50/90 md:backdrop-blur-md lg:w-64 dark:md:border-neutral-800/80 dark:md:bg-neutral-950/90">
         {sidebarBody}
       </aside>
 
       {/* Mobile Compact Header Trigger (hidden on md+ where left sidebar is active) */}
-      <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-neutral-200 bg-neutral-50/95 px-4 backdrop-blur-md md:hidden dark:border-neutral-800 dark:bg-neutral-950/95">
+      <header className="fixed top-0 left-0 right-0 z-30 flex h-14 items-center justify-between border-b border-neutral-200/80 bg-neutral-50/90 px-4 backdrop-blur-md md:hidden dark:border-neutral-800/80 dark:bg-neutral-950/90">
         <button
           type="button"
           onClick={() => handleNav('/')}
