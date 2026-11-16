@@ -35,18 +35,24 @@
 }
 
 .animate-pipeline-flow {
-  stroke-dasharray: 4 4;
+  stroke-dasharray: 6 6;
   animation: pipeline-dash 1.2s linear infinite;
 }
 
-.horizontal-canvas-track {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  height: 100%;
-  width: 700vw;
+.spatial-canvas-camera {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
   will-change: transform;
-  transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.canvas-node-container {
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  box-sizing: border-box;
 }
 
 .is-dormant .animate-pipeline-flow {
@@ -60,8 +66,7 @@
   .animate-pipeline-flow {
     animation: none;
   }
-  .horizontal-canvas-track {
+  .spatial-canvas-camera {
     transition: none !important;
   }
 }
-

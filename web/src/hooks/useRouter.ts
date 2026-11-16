@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 export type RouteMatch =
+  | { page: 'canvas' }
   | { page: 'home' }
   | { page: 'projects'; projectId: string | null }
   | { page: 'experience' }
@@ -11,18 +12,23 @@ export type RouteMatch =
 
 function normalizeHash(rawHash: string): string {
   const cleaned = rawHash.replace(/^#/, '').trim()
-  if (!cleaned || cleaned === '/') return '/'
+  if (!cleaned || cleaned === '/') return '/canvas'
   return cleaned.startsWith('/') ? cleaned : `/${cleaned}`
 }
 
 export function parseRoute(path: string): RouteMatch {
-  const normalized = path === '/' ? '/' : path.replace(/\/+$/, '')
+  const normalized = path === '/' ? '/canvas' : path.replace(/\/+$/, '')
   const parts = normalized.split('/').filter(Boolean)
 
-  if (parts.length === 0) return { page: 'home' }
+  if (parts.length === 0 || parts[0] === 'canvas') {
+    return { page: 'canvas' }
+  }
 
   const [section, param] = parts
   switch (section) {
+    case 'overview':
+    case 'home':
+      return { page: 'home' }
     case 'projects':
       return { page: 'projects', projectId: param ?? null }
     case 'experience':
@@ -36,14 +42,33 @@ export function parseRoute(path: string): RouteMatch {
     case 'contact':
       return { page: 'contact' }
     default:
-      return { page: 'home' }
+      return { page: 'canvas' }
   }
 }
 
+function getInitialPath(): string {
+  if (typeof window === 'undefined') return '/canvas'
+
+  // On page reload, ensure user lands on the scattered pipeline canvas
+  const navEntries = window.performance?.getEntriesByType?.('navigation') as
+    | PerformanceNavigationTiming[]
+    | undefined
+  const isReload = navEntries && navEntries.length > 0 && navEntries[0].type === 'reload'
+
+  if (isReload) {
+    window.location.hash = '/canvas'
+    return '/canvas'
+  }
+
+  const current = normalizeHash(window.location.hash)
+  if (!current || current === '/' || current === '/canvas') {
+    return '/canvas'
+  }
+  return current
+}
+
 export function useRouter() {
-  const [path, setPath] = useState<string>(() =>
-    typeof window !== 'undefined' ? normalizeHash(window.location.hash) : '/'
-  )
+  const [path, setPath] = useState<string>(getInitialPath)
 
   useEffect(() => {
     const onHashChange = () => {
@@ -56,7 +81,8 @@ export function useRouter() {
 
   const navigate = useCallback((nextPath: string) => {
     const target = nextPath.startsWith('/') ? nextPath : `/${nextPath}`
-    if (normalizeHash(window.location.hash) === target) {
+    const current = normalizeHash(window.location.hash)
+    if (current === target) {
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
