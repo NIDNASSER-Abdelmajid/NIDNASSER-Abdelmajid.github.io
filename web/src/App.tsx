@@ -3,6 +3,7 @@ import { CommandPalette } from './components/CommandPalette'
 import { Footer } from './components/Footer'
 import { Sidebar } from './components/Sidebar'
 import { PROFILE } from './data/portfolio'
+import { useMatrixTransition } from './hooks/useMatrixTransition'
 import { parseRoute, useRouter, type RouteMatch } from './hooks/useRouter'
 import { useTheme } from './hooks/useTheme'
 import { BlogPage } from './pages/BlogPage'
@@ -35,6 +36,19 @@ export function App() {
     SECTIONS.findIndex((s) => s.id === route.page)
   )
 
+  const { phase, isTransitioning, startTransition } = useMatrixTransition({
+    getSectionElement: (index: number) => sectionRefs.current[index],
+    getActiveIndex: () => activeIndex,
+    getTargetIndex: (path: string) => {
+      const targetPage = parseRoute(path).page
+      const idx = SECTIONS.findIndex((s) => s.id === targetPage)
+      return idx >= 0 ? idx : 0
+    },
+    onRouteSwitch: (targetPath: string) => {
+      navigate(targetPath)
+    },
+  })
+
   const handleCopyEmail = useCallback(() => {
     navigator.clipboard?.writeText(PROFILE.email).catch(() => {})
     setCopied(true)
@@ -49,10 +63,12 @@ export function App() {
         if (idx !== -1 && sectionRefs.current[idx]) {
           sectionRefs.current[idx]?.scrollTo({ top: 0, behavior: 'smooth' })
         }
+        navigate(nextPath)
+        return
       }
-      navigate(nextPath)
+      startTransition(nextPath)
     },
-    [navigate, route.page]
+    [navigate, route.page, startTransition]
   )
 
   // Reset scroll to top when sliding into an active section
@@ -93,25 +109,25 @@ export function App() {
       if (e.key === 'ArrowRight') {
         e.preventDefault()
         if (activeIndex < SECTIONS.length - 1) {
-          navigate(SECTIONS[activeIndex + 1].path)
+          handleNavigate(SECTIONS[activeIndex + 1].path)
         }
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault()
         if (activeIndex > 0) {
-          navigate(SECTIONS[activeIndex - 1].path)
+          handleNavigate(SECTIONS[activeIndex - 1].path)
         }
       } else if (e.key === 'Home') {
         e.preventDefault()
-        navigate(SECTIONS[0].path)
+        handleNavigate(SECTIONS[0].path)
       } else if (e.key === 'End') {
         e.preventDefault()
-        navigate(SECTIONS[SECTIONS.length - 1].path)
+        handleNavigate(SECTIONS[SECTIONS.length - 1].path)
       }
     }
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [activeIndex, navigate, paletteOpen])
+  }, [activeIndex, handleNavigate, paletteOpen])
 
   return (
     <div className="fixed inset-0 h-screen w-screen overflow-hidden bg-neutral-50 text-neutral-950 dark:bg-neutral-950 dark:text-neutral-50">
@@ -124,6 +140,9 @@ export function App() {
         onResetSystem={() => setPreference('system')}
         onOpenPalette={() => setPaletteOpen(true)}
       />
+
+      {/* Matrix Digital Scanline Beam during page transitions */}
+      {isTransitioning && <div className="matrix-scanline-beam" aria-hidden="true" />}
 
       {/* The Single-Plane Horizontal Canvas Track with Unified Dotted Blueprint Background */}
       <div
@@ -141,6 +160,12 @@ export function App() {
           aria-hidden={activeIndex !== 0}
           className={`w-screen min-w-[100vw] shrink-0 h-screen overflow-y-auto overflow-x-hidden md:pl-60 lg:pl-64 pt-14 md:pt-0 flex flex-col justify-between outline-none @container ${
             Math.abs(activeIndex - 0) <= 1 ? '' : 'is-dormant'
+          } ${
+            phase === 'exiting' && activeIndex === 0
+              ? 'matrix-deconstruct'
+              : phase === 'entering' && activeIndex === 0
+                ? 'matrix-reconstruct'
+                : ''
           }`}
         >
           <div className="flex-1">
@@ -162,6 +187,12 @@ export function App() {
           aria-hidden={activeIndex !== 1}
           className={`w-screen min-w-[100vw] shrink-0 h-screen overflow-y-auto overflow-x-hidden md:pl-60 lg:pl-64 pt-14 md:pt-0 flex flex-col justify-between outline-none @container ${
             Math.abs(activeIndex - 1) <= 1 ? '' : 'is-dormant'
+          } ${
+            phase === 'exiting' && activeIndex === 1
+              ? 'matrix-deconstruct'
+              : phase === 'entering' && activeIndex === 1
+                ? 'matrix-reconstruct'
+                : ''
           }`}
         >
           <div className="flex-1">
@@ -182,6 +213,12 @@ export function App() {
           aria-hidden={activeIndex !== 2}
           className={`w-screen min-w-[100vw] shrink-0 h-screen overflow-y-auto overflow-x-hidden md:pl-60 lg:pl-64 pt-14 md:pt-0 flex flex-col justify-between outline-none @container ${
             Math.abs(activeIndex - 2) <= 1 ? '' : 'is-dormant'
+          } ${
+            phase === 'exiting' && activeIndex === 2
+              ? 'matrix-deconstruct'
+              : phase === 'entering' && activeIndex === 2
+                ? 'matrix-reconstruct'
+                : ''
           }`}
         >
           <div className="flex-1">
@@ -199,6 +236,12 @@ export function App() {
           aria-hidden={activeIndex !== 3}
           className={`w-screen min-w-[100vw] shrink-0 h-screen overflow-y-auto overflow-x-hidden md:pl-60 lg:pl-64 pt-14 md:pt-0 flex flex-col justify-between outline-none @container ${
             Math.abs(activeIndex - 3) <= 1 ? '' : 'is-dormant'
+          } ${
+            phase === 'exiting' && activeIndex === 3
+              ? 'matrix-deconstruct'
+              : phase === 'entering' && activeIndex === 3
+                ? 'matrix-reconstruct'
+                : ''
           }`}
         >
           <div className="flex-1">
@@ -216,6 +259,12 @@ export function App() {
           aria-hidden={activeIndex !== 4}
           className={`w-screen min-w-[100vw] shrink-0 h-screen overflow-y-auto overflow-x-hidden md:pl-60 lg:pl-64 pt-14 md:pt-0 flex flex-col justify-between outline-none @container ${
             Math.abs(activeIndex - 4) <= 1 ? '' : 'is-dormant'
+          } ${
+            phase === 'exiting' && activeIndex === 4
+              ? 'matrix-deconstruct'
+              : phase === 'entering' && activeIndex === 4
+                ? 'matrix-reconstruct'
+                : ''
           }`}
         >
           <div className="flex-1">
@@ -233,6 +282,12 @@ export function App() {
           aria-hidden={activeIndex !== 5}
           className={`w-screen min-w-[100vw] shrink-0 h-screen overflow-y-auto overflow-x-hidden md:pl-60 lg:pl-64 pt-14 md:pt-0 flex flex-col justify-between outline-none @container ${
             Math.abs(activeIndex - 5) <= 1 ? '' : 'is-dormant'
+          } ${
+            phase === 'exiting' && activeIndex === 5
+              ? 'matrix-deconstruct'
+              : phase === 'entering' && activeIndex === 5
+                ? 'matrix-reconstruct'
+                : ''
           }`}
         >
           <div className="flex-1">
@@ -253,6 +308,12 @@ export function App() {
           aria-hidden={activeIndex !== 6}
           className={`w-screen min-w-[100vw] shrink-0 h-screen overflow-y-auto overflow-x-hidden md:pl-60 lg:pl-64 pt-14 md:pt-0 flex flex-col justify-between outline-none @container ${
             Math.abs(activeIndex - 6) <= 1 ? '' : 'is-dormant'
+          } ${
+            phase === 'exiting' && activeIndex === 6
+              ? 'matrix-deconstruct'
+              : phase === 'entering' && activeIndex === 6
+                ? 'matrix-reconstruct'
+                : ''
           }`}
         >
           <div className="flex-1">
