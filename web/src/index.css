@@ -35,24 +35,18 @@
 }
 
 .animate-pipeline-flow {
-  stroke-dasharray: 6 6;
+  stroke-dasharray: 4 4;
   animation: pipeline-dash 1.2s linear infinite;
 }
 
-.spatial-canvas-camera {
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform-origin: 0 0;
+.horizontal-canvas-track {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  height: 100%;
+  width: 700vw;
   will-change: transform;
-  transition: transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.canvas-node-container {
-  position: absolute;
-  width: 100vw;
-  height: 100vh;
-  box-sizing: border-box;
+  transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .is-dormant .animate-pipeline-flow {
@@ -66,7 +60,8 @@
   .animate-pipeline-flow {
     animation: none;
   }
-  .spatial-canvas-camera {
+  .horizontal-canvas-track {
     transition: none !important;
   }
 }
+

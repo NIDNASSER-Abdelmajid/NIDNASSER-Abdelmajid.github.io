@@ -11,11 +11,9 @@ import {
   Menu,
   Monitor,
   Moon,
-  Network,
   Sun,
   Terminal,
   X,
-  ZoomOut,
 } from 'lucide-react'
 import { PROFILE } from '../data/portfolio'
 import type { RouteMatch } from '../hooks/useRouter'
@@ -25,9 +23,7 @@ import { ProfilePhoto } from './ProfilePhoto'
 
 interface SidebarProps {
   route: RouteMatch
-  viewMode: 'canvas' | 'section'
   onNavigate: (path: string) => void
-  onZoomOut: () => void
   resolvedTheme: ResolvedTheme
   preference: ThemePreference
   onToggleTheme: () => void
@@ -40,23 +36,20 @@ const NAV_ITEMS: {
   page: RouteMatch['page']
   code: string
   label: string
-  stage: string
   icon: typeof Terminal
 }[] = [
-  { path: '/overview', page: 'home', code: '00', label: 'Overview', stage: 'Ingest', icon: Terminal },
-  { path: '/projects', page: 'projects', code: '01', label: 'Projects', stage: 'Pipelines', icon: Database },
-  { path: '/experience', page: 'experience', code: '02', label: 'Experience', stage: 'Ops', icon: Briefcase },
-  { path: '/credentials', page: 'credentials', code: '03', label: 'Credentials', stage: 'QA', icon: Award },
-  { path: '/stack', page: 'stack', code: '04', label: 'Stack', stage: 'Tooling', icon: Layers },
-  { path: '/blog', page: 'blog', code: '05', label: 'Blog', stage: 'Logs', icon: BookOpen },
-  { path: '/contact', page: 'contact', code: '06', label: 'Contact', stage: 'Sink', icon: Mail },
+  { path: '/', page: 'home', code: '00', label: 'Overview', icon: Terminal },
+  { path: '/projects', page: 'projects', code: '01', label: 'Projects', icon: Database },
+  { path: '/experience', page: 'experience', code: '02', label: 'Experience', icon: Briefcase },
+  { path: '/credentials', page: 'credentials', code: '03', label: 'Credentials', icon: Award },
+  { path: '/stack', page: 'stack', code: '04', label: 'Stack', icon: Layers },
+  { path: '/blog', page: 'blog', code: '05', label: 'Blog', icon: BookOpen },
+  { path: '/contact', page: 'contact', code: '06', label: 'Contact', icon: Mail },
 ]
 
 export function Sidebar({
   route,
-  viewMode,
   onNavigate,
-  onZoomOut,
   resolvedTheme,
   preference,
   onToggleTheme,
@@ -70,37 +63,23 @@ export function Sidebar({
     setMobileOpen(false)
   }
 
-  const handleZoomOutClick = () => {
-    onZoomOut()
-    setMobileOpen(false)
-  }
-
-  const isCanvasMode = viewMode === 'canvas'
-
   const sidebarBody = (
     <div className="flex h-full flex-col justify-between overflow-y-auto px-5 py-6">
       <div>
-        {/* Portrait + Identity (Clicking zooms out to pipeline canvas) */}
+        {/* Portrait + Identity */}
         <button
           type="button"
-          onClick={handleZoomOutClick}
+          onClick={() => handleNav('/')}
           className="group block w-full text-left"
-          title="Click to zoom out to Pipeline Canvas"
         >
-          <div className="flex items-center justify-between">
-            <ProfilePhoto name={PROFILE.name} photoUrl={PROFILE.photoUrl} size="sidebar" />
-            <span className="flex items-center gap-1 rounded-md border border-neutral-300 bg-neutral-100 px-2 py-1 font-mono text-[10px] text-neutral-600 transition-colors group-hover:border-neutral-900 group-hover:text-neutral-950 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:group-hover:border-neutral-100 dark:group-hover:text-neutral-100">
-              <ZoomOut className="h-3 w-3" strokeWidth={1.8} />
-              <span>Canvas</span>
-            </span>
-          </div>
+          <ProfilePhoto name={PROFILE.name} photoUrl={PROFILE.photoUrl} size="sidebar" />
 
           <div className="mt-4">
             <div className="text-sm font-semibold tracking-tight text-neutral-950 transition-opacity group-hover:opacity-80 dark:text-neutral-50">
               {PROFILE.name}
             </div>
             <div className="mt-1 flex items-center gap-2 font-mono text-xs text-neutral-600 dark:text-neutral-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="h-1.5 w-1.5 rounded-full bg-neutral-950 dark:bg-neutral-50" />
               <span>{PROFILE.role}</span>
             </div>
             <div className="mt-1 inline-flex items-center gap-1 font-mono text-xs text-neutral-500 dark:text-neutral-500">
@@ -110,29 +89,8 @@ export function Sidebar({
           </div>
         </button>
 
-        {/* Dedicated Zoom Out / Pipeline Canvas Button */}
-        <button
-          type="button"
-          onClick={handleZoomOutClick}
-          className="mt-4 flex w-full items-center justify-between rounded-xl border border-neutral-300/80 bg-neutral-100/80 px-3 py-2 font-mono text-xs text-neutral-800 transition-colors hover:border-neutral-950 hover:bg-neutral-200/90 dark:border-neutral-800 dark:bg-neutral-900/80 dark:text-neutral-300 dark:hover:border-neutral-200 dark:hover:bg-neutral-800"
-        >
-          <span className="flex items-center gap-2">
-            <Network className="h-3.5 w-3.5 text-neutral-600 dark:text-neutral-400" strokeWidth={1.8} />
-            <span className="font-medium">Pipeline Canvas</span>
-          </span>
-          <span className="rounded bg-white px-1.5 py-0.5 text-[10px] text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">
-            Esc
-          </span>
-        </button>
-
-        {/* Vertical Section Navigation */}
-        <nav
-          aria-label="Primary navigation"
-          className="mt-5 flex flex-col gap-1 border-t border-neutral-200 pt-4 dark:border-neutral-800"
-        >
-          <div className="px-3 pb-1 font-mono text-[10px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-600">
-            Pipeline Stages
-          </div>
+        {/* Vertical Navigation */}
+        <nav aria-label="Primary navigation" className="mt-7 flex flex-col gap-1 border-t border-neutral-200 pt-5 dark:border-neutral-800">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon
             const active = route.page === item.page
@@ -249,22 +207,16 @@ export function Sidebar({
 
   return (
     <>
-      {/* Desktop Left Vertical Navigation Rail (Visible when zoomed into a section) */}
-      <aside
-        className={`hidden md:fixed md:top-0 md:left-0 md:bottom-0 md:z-30 md:flex md:h-screen md:w-60 md:flex-col md:border-r md:border-neutral-200/80 md:bg-neutral-50/95 md:backdrop-blur-md lg:w-64 dark:md:border-neutral-800/80 dark:md:bg-neutral-950/95 transition-all duration-500 ease-out ${
-          isCanvasMode
-            ? '-translate-x-full opacity-0 pointer-events-none'
-            : 'translate-x-0 opacity-100 pointer-events-auto'
-        }`}
-      >
+      {/* Desktop Left Vertical Navigation Rail */}
+      <aside className="hidden md:fixed md:top-0 md:left-0 md:bottom-0 md:z-30 md:flex md:h-screen md:w-60 md:flex-col md:border-r md:border-neutral-200/80 md:bg-neutral-50/90 md:backdrop-blur-md lg:w-64 dark:md:border-neutral-800/80 dark:md:bg-neutral-950/90">
         {sidebarBody}
       </aside>
 
-      {/* Mobile Top Header (Always visible on mobile viewports) */}
-      <header className="fixed top-0 left-0 right-0 z-40 flex h-14 items-center justify-between border-b border-neutral-200/80 bg-neutral-50/95 px-4 backdrop-blur-md md:hidden dark:border-neutral-800/80 dark:bg-neutral-950/95">
+      {/* Mobile Compact Header Trigger (hidden on md+ where left sidebar is active) */}
+      <header className="fixed top-0 left-0 right-0 z-30 flex h-14 items-center justify-between border-b border-neutral-200/80 bg-neutral-50/90 px-4 backdrop-blur-md md:hidden dark:border-neutral-800/80 dark:bg-neutral-950/90">
         <button
           type="button"
-          onClick={handleZoomOutClick}
+          onClick={() => handleNav('/')}
           className="flex items-center gap-2.5 text-sm font-semibold tracking-tight text-neutral-950 dark:text-neutral-50"
         >
           <span className="flex h-7 w-7 items-center justify-center rounded border border-neutral-300 bg-neutral-950 font-mono text-xs font-semibold text-neutral-50 dark:border-neutral-700 dark:bg-neutral-50 dark:text-neutral-950">
@@ -276,17 +228,6 @@ export function Sidebar({
         </button>
 
         <div className="flex items-center gap-2">
-          {!isCanvasMode && (
-            <button
-              type="button"
-              onClick={handleZoomOutClick}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-neutral-300 bg-neutral-100 px-2 font-mono text-xs text-neutral-800 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
-            >
-              <Network className="h-3 w-3" strokeWidth={1.8} />
-              <span>Canvas</span>
-            </button>
-          )}
-
           <button
             type="button"
             onClick={onOpenPalette}
@@ -309,49 +250,40 @@ export function Sidebar({
             )}
           </button>
 
-          {!isCanvasMode && (
-            <button
-              type="button"
-              onClick={() => setMobileOpen((prev) => !prev)}
-              aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
-              aria-expanded={mobileOpen}
-              className="inline-flex h-8 w-8 items-center justify-center rounded border border-neutral-200 bg-white text-neutral-700 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300"
-            >
-              {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Open navigation sidebar"
+            className="inline-flex h-8 w-8 items-center justify-center rounded border border-neutral-200 bg-white text-neutral-700 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300"
+          >
+            <Menu className="h-4 w-4" strokeWidth={1.8} />
+          </button>
         </div>
       </header>
 
-      {/* Mobile Drawer (Only active when in section mode and drawer is opened) */}
-      {mobileOpen && !isCanvasMode && (
+      {/* Mobile Left Slide-Over Drawer */}
+      {mobileOpen && (
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex flex-col bg-neutral-950/40 backdrop-blur-sm md:hidden"
+          aria-label="Navigation sidebar"
+          className="fixed inset-0 z-50 flex md:hidden"
         >
-          <div className="flex h-full w-4/5 max-w-xs flex-col border-r border-neutral-200 bg-neutral-50 shadow-2xl dark:border-neutral-800 dark:bg-neutral-950">
-            <div className="flex h-14 items-center justify-between border-b border-neutral-200 px-4 dark:border-neutral-800">
-              <span className="font-mono text-xs font-semibold uppercase tracking-wider text-neutral-600 dark:text-neutral-400">
-                Navigation
-              </span>
-              <button
-                type="button"
-                onClick={() => setMobileOpen(false)}
-                aria-label="Close navigation"
-                className="inline-flex h-8 w-8 items-center justify-center rounded border border-neutral-200 text-neutral-700 dark:border-neutral-800 dark:text-neutral-300"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            {sidebarBody}
-          </div>
-          <button
-            type="button"
-            className="flex-1 cursor-default"
-            aria-label="Close drawer backdrop"
+          <div
+            className="fixed inset-0 bg-neutral-950/60 backdrop-blur-xs"
             onClick={() => setMobileOpen(false)}
           />
+          <aside className="relative z-10 flex h-full w-72 max-w-[85vw] flex-col border-r border-neutral-200 bg-neutral-50 shadow-2xl dark:border-neutral-800 dark:bg-neutral-950">
+            <button
+              type="button"
+              onClick={() => setMobileOpen(false)}
+              aria-label="Close navigation sidebar"
+              className="absolute top-4 right-4 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-600 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300"
+            >
+              <X className="h-4 w-4" strokeWidth={1.8} />
+            </button>
+            {sidebarBody}
+          </aside>
         </div>
       )}
     </>

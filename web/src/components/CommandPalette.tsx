@@ -45,24 +45,13 @@ export function CommandPalette({
   const commands = useMemo<CommandItem[]>(() => {
     const navItems: CommandItem[] = [
       {
-        id: 'nav-canvas',
-        group: 'Pages',
-        label: 'Pipeline Canvas (Architecture DAG)',
-        hint: '/canvas',
-        icon: ArrowRight,
-        action: () => {
-          onNavigate('/canvas')
-          onClose()
-        },
-      },
-      {
         id: 'nav-home',
         group: 'Pages',
-        label: 'Overview & Ingestion Topology',
-        hint: '/overview',
+        label: 'Overview & Pipeline Topology',
+        hint: '/',
         icon: ArrowRight,
         action: () => {
-          onNavigate('/overview')
+          onNavigate('/')
           onClose()
         },
       },
