@@ -1,7 +1,8 @@
-import { ArrowRight, BookOpen, Check, Copy, MapPin } from 'lucide-react'
+import { ArrowRight, BookOpen, Check, Copy, MapPin, Users } from 'lucide-react'
 import { PipelineTopology } from '../components/PipelineTopology'
 import { ProfilePhoto } from '../components/ProfilePhoto'
 import { PROFILE } from '../data/portfolio'
+import { useVisitorCount } from '../hooks/useVisitorCount'
 
 interface HomePageProps {
   copied: boolean
@@ -10,6 +11,8 @@ interface HomePageProps {
 }
 
 export function HomePage({ copied, onCopyEmail, onNavigate }: HomePageProps) {
+  const visitorCount = useVisitorCount()
+
   return (
     <section className="flex min-h-[calc(100vh-8rem)] items-center py-10 @2xl:py-16">
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-8">
@@ -28,6 +31,17 @@ export function HomePage({ copied, onCopyEmail, onNavigate }: HomePageProps) {
                   <span className="inline-flex items-center gap-1">
                     <MapPin className="h-3 w-3" strokeWidth={1.8} />
                     {PROFILE.location}
+                  </span>
+                </div>
+                <div
+                  className="mt-1 flex items-center gap-1 font-mono text-xs text-neutral-500 dark:text-neutral-500"
+                  title="Total aggregated visitors"
+                >
+                  <Users className="h-3 w-3 shrink-0" strokeWidth={1.8} />
+                  <span>
+                    {visitorCount === null
+                      ? '-- visitors'
+                      : `${visitorCount.toLocaleString()} ${visitorCount === 1 ? 'visitor' : 'visitors'}`}
                   </span>
                 </div>
               </div>

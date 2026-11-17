@@ -13,11 +13,13 @@ import {
   Moon,
   Sun,
   Terminal,
+  Users,
   X,
 } from 'lucide-react'
 import { PROFILE } from '../data/portfolio'
 import type { RouteMatch } from '../hooks/useRouter'
 import type { ResolvedTheme, ThemePreference } from '../hooks/useTheme'
+import { useVisitorCount } from '../hooks/useVisitorCount'
 import { GitHubIcon, LinkedInIcon } from './BrandIcons'
 import { ProfilePhoto } from './ProfilePhoto'
 
@@ -38,14 +40,14 @@ const NAV_ITEMS: {
   label: string
   icon: typeof Terminal
 }[] = [
-  { path: '/', page: 'home', code: '00', label: 'Overview', icon: Terminal },
-  { path: '/projects', page: 'projects', code: '01', label: 'Projects', icon: Database },
-  { path: '/experience', page: 'experience', code: '02', label: 'Experience', icon: Briefcase },
-  { path: '/credentials', page: 'credentials', code: '03', label: 'Credentials', icon: Award },
-  { path: '/stack', page: 'stack', code: '04', label: 'Stack', icon: Layers },
-  { path: '/blog', page: 'blog', code: '05', label: 'Blog', icon: BookOpen },
-  { path: '/contact', page: 'contact', code: '06', label: 'Contact', icon: Mail },
-]
+    { path: '/', page: 'home', code: '00', label: 'Overview', icon: Terminal },
+    { path: '/projects', page: 'projects', code: '01', label: 'Projects', icon: Database },
+    { path: '/experience', page: 'experience', code: '02', label: 'Experience', icon: Briefcase },
+    { path: '/credentials', page: 'credentials', code: '03', label: 'Credentials', icon: Award },
+    { path: '/stack', page: 'stack', code: '04', label: 'Stack', icon: Layers },
+    { path: '/blog', page: 'blog', code: '05', label: 'Blog', icon: BookOpen },
+    { path: '/contact', page: 'contact', code: '06', label: 'Contact', icon: Mail },
+  ]
 
 export function Sidebar({
   route,
@@ -57,6 +59,7 @@ export function Sidebar({
   onOpenPalette,
 }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const visitorCount = useVisitorCount()
 
   const handleNav = (path: string) => {
     onNavigate(path)
@@ -82,9 +85,20 @@ export function Sidebar({
               <span className="h-1.5 w-1.5 rounded-full bg-neutral-950 dark:bg-neutral-50" />
               <span>{PROFILE.role}</span>
             </div>
-            <div className="mt-1 inline-flex items-center gap-1 font-mono text-xs text-neutral-500 dark:text-neutral-500">
-              <MapPin className="h-3 w-3" strokeWidth={1.8} />
+            <div className="mt-1 flex items-center gap-1 font-mono text-xs text-neutral-500 dark:text-neutral-500">
+              <MapPin className="h-3 w-3 shrink-0" strokeWidth={1.8} />
               <span>{PROFILE.location}</span>
+            </div>
+            <div
+              className="mt-1 flex items-center gap-1 font-mono text-xs text-neutral-500 dark:text-neutral-500"
+              title="Total aggregated visitors"
+            >
+              <Users className="h-3 w-3 shrink-0" strokeWidth={1.8} />
+              <span>
+                {visitorCount === null
+                  ? '-- visitors'
+                  : `${visitorCount.toLocaleString()} ${visitorCount === 1 ? 'visitor' : 'visitors'}`}
+              </span>
             </div>
           </div>
         </button>
@@ -100,11 +114,10 @@ export function Sidebar({
                 type="button"
                 onClick={() => handleNav(item.path)}
                 aria-current={active ? 'page' : undefined}
-                className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-mono text-xs transition-colors ${
-                  active
-                    ? 'bg-neutral-950 text-neutral-50 dark:bg-neutral-50 dark:text-neutral-950'
-                    : 'text-neutral-600 hover:bg-neutral-200/60 hover:text-neutral-950 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-50'
-                }`}
+                className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-mono text-xs transition-colors ${active
+                  ? 'bg-neutral-950 text-neutral-50 dark:bg-neutral-50 dark:text-neutral-950'
+                  : 'text-neutral-600 hover:bg-neutral-200/60 hover:text-neutral-950 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-50'
+                  }`}
               >
                 <span className="flex items-center gap-2.5">
                   <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.8} />
