@@ -46,147 +46,11 @@
   height: 100%;
   width: 700vw;
   will-change: transform;
-  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .is-dormant .animate-pipeline-flow {
   animation: none !important;
-}
-
-/* Matrix Digital Deconstruction Animations */
-@keyframes matrix-deconstruct {
-  0% {
-    clip-path: inset(0% 0 0% 0);
-    transform: translate3d(0, 0, 0);
-    filter: brightness(1);
-    opacity: 1;
-  }
-  20% {
-    clip-path: inset(6% 0 6% 0);
-    transform: translate3d(-3px, 1px, 0) skewX(-0.4deg);
-    filter: contrast(1.1) brightness(1.15);
-    opacity: 0.95;
-  }
-  45% {
-    clip-path: inset(22% 0 22% 0);
-    transform: translate3d(3px, -1px, 0) skewX(0.4deg);
-    filter: contrast(1.2) brightness(1.25);
-    opacity: 0.85;
-  }
-  75% {
-    clip-path: inset(42% 0 42% 0);
-    transform: translate3d(-2px, 0, 0) scaleY(0.4);
-    filter: contrast(1.3) brightness(1.4);
-    opacity: 0.5;
-  }
-  100% {
-    clip-path: inset(49.9% 0 49.9% 0);
-    transform: translate3d(0, 0, 0) scaleY(0.01);
-    filter: brightness(2);
-    opacity: 0;
-  }
-}
-
-@keyframes matrix-reconstruct {
-  0% {
-    clip-path: inset(49.9% 0 49.9% 0);
-    transform: translate3d(0, 0, 0) scaleY(0.01);
-    filter: brightness(2);
-    opacity: 0;
-  }
-  25% {
-    clip-path: inset(38% 0 38% 0);
-    transform: translate3d(2px, 0, 0) scaleY(0.3);
-    filter: contrast(1.2) brightness(1.3);
-    opacity: 0.6;
-  }
-  55% {
-    clip-path: inset(16% 0 16% 0);
-    transform: translate3d(-2px, 0, 0) skewX(-0.3deg) scaleY(0.85);
-    filter: contrast(1.1) brightness(1.15);
-    opacity: 0.9;
-  }
-  80% {
-    clip-path: inset(4% 0 4% 0);
-    transform: translate3d(1px, 0, 0) skewX(0.2deg) scaleY(0.98);
-    filter: brightness(1.05);
-    opacity: 1;
-  }
-  100% {
-    clip-path: inset(0% 0 0% 0);
-    transform: translate3d(0, 0, 0) scaleY(1);
-    filter: brightness(1);
-    opacity: 1;
-  }
-}
-
-@keyframes matrix-scanline {
-  0% {
-    transform: translateY(-100%);
-    opacity: 0;
-  }
-  20% {
-    opacity: 0.7;
-  }
-  80% {
-    opacity: 0.7;
-  }
-  100% {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-}
-
-.matrix-deconstruct {
-  animation: matrix-deconstruct 0.26s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  will-change: clip-path, transform, opacity, filter;
-}
-
-.matrix-reconstruct {
-  animation: matrix-reconstruct 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  will-change: clip-path, transform, opacity, filter;
-}
-
-.matrix-scanline-beam {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 50;
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    rgba(16, 185, 129, 0.08) 48%,
-    rgba(16, 185, 129, 0.18) 50%,
-    rgba(16, 185, 129, 0.08) 52%,
-    transparent 100%
-  );
-  animation: matrix-scanline 0.54s linear forwards;
-}
-
-.dark .matrix-scanline-beam {
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    rgba(52, 211, 153, 0.09) 48%,
-    rgba(52, 211, 153, 0.22) 50%,
-    rgba(52, 211, 153, 0.09) 52%,
-    transparent 100%
-  );
-}
-
-@keyframes matrix-fade-exit {
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes matrix-fade-entry {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -199,19 +63,5 @@
   .horizontal-canvas-track {
     transition: none !important;
   }
-  .matrix-deconstruct {
-    animation: matrix-fade-exit 0.14s ease-out forwards !important;
-    clip-path: none !important;
-    transform: none !important;
-    filter: none !important;
-  }
-  .matrix-reconstruct {
-    animation: matrix-fade-entry 0.14s ease-out forwards !important;
-    clip-path: none !important;
-    transform: none !important;
-    filter: none !important;
-  }
-  .matrix-scanline-beam {
-    display: none !important;
-  }
 }
+
