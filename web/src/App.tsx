@@ -24,7 +24,7 @@ const SECTIONS: { id: RouteMatch['page']; path: string; label: string }[] = [
 ]
 
 export function App() {
-  const { route, navigate } = useRouter()
+  const { path, route, navigate } = useRouter()
   const { preference, resolvedTheme, setPreference, toggleTheme } = useTheme()
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -55,13 +55,13 @@ export function App() {
     [navigate, route.page]
   )
 
-  // Reset scroll to top when sliding into an active section
+  // Reset scroll to top when sliding into an active section or opening a detail page
   useEffect(() => {
     const el = sectionRefs.current[activeIndex]
     if (el && el.scrollTop > 0) {
       el.scrollTo({ top: 0, behavior: 'auto' })
     }
-  }, [activeIndex])
+  }, [activeIndex, path])
 
   // Keyboard navigation: Cmd/Ctrl+K for palette, ArrowLeft/ArrowRight to slide sections
   useEffect(() => {

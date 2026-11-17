@@ -1,165 +1,174 @@
 import { useEffect, useState } from 'react'
+import { getCookie, setCookie } from '../utils/cookies'
 
-const COUNTER_NAMESPACE = 'nidnasser-abdelmajid.github.io'
-const ABACUS_BASE = `https://abacus.jasoncameron.dev`
-const READ_CACHE_KEY = 'blog-real-reads-cache-v1'
-const MIN_ENGAGED_READ_MS = 3500
+const COUNTER_API_BASE = 'https://countapi.mileshilliard.com/api/v1'
+const BLOG_KEY_PREFIX = 'nidnasser_blog_read_v2_'
+const BLOG_COOKIE_PREFIX = 'nidnasser_blog_read_1h_'
+const ONE_HOUR_SECONDS = 3600
+const MIN_ARTICLE_DWELL_MS = 30_000
 
-function loadCachedReads(slugs: string[]): Record<string, number | null> {
-  const initial: Record<string, number | null> = Object.fromEntries(slugs.map((s) => [s, null]))
-  if (typeof window === 'undefined') return initial
-  try {
-    const raw = window.localStorage.getItem(READ_CACHE_KEY)
-    if (!raw) return initial
-    const parsed = JSON.parse(raw) as Record<string, number>
-    for (const slug of slugs) {
-      if (typeof parsed[slug] === 'number' && parsed[slug] >= 0) {
-        initial[slug] = parsed[slug]
-      }
-    }
-  } catch {
-    // ignore storage errors
-  }
-  return initial
+function toCounterKey(slug: string): string {
+  const safe = slug.replace(/[^a-zA-Z0-9_-]/g, '_')
+  return `${BLOG_KEY_PREFIX}${safe}`
 }
 
-function persistCachedReads(map: Record<string, number | null>) {
-  try {
-    const clean: Record<string, number> = {}
-    for (const [key, val] of Object.entries(map)) {
-      if (typeof val === 'number' && val >= 0) clean[key] = val
-    }
-    window.localStorage.setItem(READ_CACHE_KEY, JSON.stringify(clean))
-  } catch {
-    // ignore storage errors
-  }
+function toCookieName(slug: string): string {
+  const safe = slug.replace(/[^a-zA-Z0-9_-]/g, '_')
+  return `${BLOG_COOKIE_PREFIX}${safe}`
 }
 
-async function fetchCounterValue(slug: string, signal?: AbortSignal): Promise<number | null> {
+async function queryArticleCounter(
+  action: 'get' | 'hit',
+  slug: string,
+  signal?: AbortSignal
+): Promise<number | null> {
   try {
-    const res = await fetch(`${ABACUS_BASE}/get/${COUNTER_NAMESPACE}/blog-${encodeURIComponent(slug)}`, {
+    const key = toCounterKey(slug)
+    const res = await fetch(`${COUNTER_API_BASE}/${action}/${encodeURIComponent(key)}`, {
+      cache: 'no-store',
       signal,
     })
     if (res.status === 404) return 0
     if (!res.ok) return null
     const data = (await res.json()) as { value?: unknown }
-    return typeof data.value === 'number' ? data.value : null
-  } catch {
-    return null
-  }
-}
-
-async function incrementCounterValue(slug: string): Promise<number | null> {
-  try {
-    const res = await fetch(`${ABACUS_BASE}/hit/${COUNTER_NAMESPACE}/blog-${encodeURIComponent(slug)}`)
-    if (!res.ok) return null
-    const data = (await res.json()) as { value?: unknown }
-    return typeof data.value === 'number' ? data.value : null
+    const num = typeof data.value === 'number' ? data.value : Number(data.value)
+    return Number.isFinite(num) && num >= 0 ? num : null
   } catch {
     return null
   }
 }
 
 /**
- * Fetches live global article read counts from Abacus and records an actual read
- * once the reader stays engaged (>= 3.5s or >= 30% scroll) once per browser session.
+ * Fetches live global article read counts and records a qualified read only when
+ * the user opens an article and stays actively visible on it for at least 30 seconds
+ * (deduplicated with a 1-hour per-article cookie).
  */
 export function useBlogReads(slugs: string[], activeSlug: string | null) {
   const [readsMap, setReadsMap] = useState<Record<string, number | null>>(() =>
-    loadCachedReads(slugs)
+    Object.fromEntries(slugs.map((s) => [s, null]))
   )
 
   const slugsKey = slugs.join('|')
 
-  // Sync current global counts for all listed articles
+  // Sync authoritative global read counts for all listed articles
   useEffect(() => {
-    const controller = new AbortController()
     let cancelled = false
+    let controller = new AbortController()
 
-    Promise.all(
-      slugs.map(async (slug) => {
-        const value = await fetchCounterValue(slug, controller.signal)
-        return [slug, value] as const
-      })
-    ).then((results) => {
+    const syncAll = async () => {
+      controller.abort()
+      controller = new AbortController()
+      const results = await Promise.all(
+        slugs.map(async (slug) => {
+          const value = await queryArticleCounter('get', slug, controller.signal)
+          return [slug, value] as const
+        })
+      )
       if (cancelled) return
       setReadsMap((prev) => {
         const next = { ...prev }
         for (const [slug, val] of results) {
           if (val !== null) {
             next[slug] = val
-          } else if (next[slug] === null) {
-            next[slug] = 0
           }
         }
-        persistCachedReads(next)
         return next
       })
-    })
+    }
+
+    void syncAll()
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        void syncAll()
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibility)
 
     return () => {
       cancelled = true
       controller.abort()
+      document.removeEventListener('visibilitychange', onVisibility)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slugsKey])
 
-  // Record an actual engaged read when visiting an article page
+  // Record an engaged read ONLY after 30s of active visible time on the opened article
   useEffect(() => {
     if (!activeSlug || !slugs.includes(activeSlug)) return
 
-    const sessionKey = `blog-engaged-read-v1:${activeSlug}`
-    try {
-      if (window.sessionStorage.getItem(sessionKey)) return
-    } catch {
-      // continue if sessionStorage unavailable
-    }
+    const cookieName = toCookieName(activeSlug)
+    if (getCookie(cookieName)) return
 
+    let cancelled = false
     let fired = false
+    let accumulatedVisibleMs = 0
+    let visibleSince: number | null =
+      document.visibilityState === 'visible' ? performance.now() : null
     let timerId: number | undefined
 
+    const clearTimer = () => {
+      if (timerId !== undefined) {
+        window.clearTimeout(timerId)
+        timerId = undefined
+      }
+    }
+
     const triggerRead = async () => {
-      if (fired) return
+      if (fired || cancelled) return
+      if (getCookie(cookieName)) return
       fired = true
-      window.removeEventListener('scroll', onScroll)
-      if (timerId !== undefined) window.clearTimeout(timerId)
+      clearTimer()
 
-      try {
-        window.sessionStorage.setItem(sessionKey, '1')
-      } catch {
-        // ignore storage errors
-      }
+      setCookie(cookieName, '1', ONE_HOUR_SECONDS)
 
-      const liveVal = await incrementCounterValue(activeSlug)
-      setReadsMap((prev) => {
-        const current = prev[activeSlug] ?? 0
-        const next = {
+      const liveVal = await queryArticleCounter('hit', activeSlug)
+      if (!cancelled && liveVal !== null) {
+        setReadsMap((prev) => ({
           ...prev,
-          [activeSlug]: liveVal !== null ? liveVal : current + 1,
-        }
-        persistCachedReads(next)
-        return next
-      })
-    }
-
-    const onScroll = () => {
-      const scrollable = document.documentElement.scrollHeight - window.innerHeight
-      if (scrollable <= 120) return
-      const ratio = window.scrollY / scrollable
-      if (ratio >= 0.3) {
-        void triggerRead()
+          [activeSlug]: liveVal,
+        }))
       }
     }
 
-    timerId = window.setTimeout(() => {
-      void triggerRead()
-    }, MIN_ENGAGED_READ_MS)
+    const armTimer = () => {
+      clearTimer()
+      if (fired || cancelled || getCookie(cookieName)) return
+      if (document.visibilityState !== 'visible') return
 
-    window.addEventListener('scroll', onScroll, { passive: true })
+      const remaining = Math.max(0, MIN_ARTICLE_DWELL_MS - accumulatedVisibleMs)
+      if (remaining === 0) {
+        void triggerRead()
+        return
+      }
+
+      visibleSince = performance.now()
+      timerId = window.setTimeout(() => {
+        accumulatedVisibleMs = MIN_ARTICLE_DWELL_MS
+        visibleSince = null
+        void triggerRead()
+      }, remaining)
+    }
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        armTimer()
+      } else {
+        clearTimer()
+        if (visibleSince !== null) {
+          accumulatedVisibleMs += performance.now() - visibleSince
+          visibleSince = null
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    armTimer()
 
     return () => {
-      if (timerId !== undefined) window.clearTimeout(timerId)
-      window.removeEventListener('scroll', onScroll)
+      cancelled = true
+      clearTimer()
+      document.removeEventListener('visibilitychange', onVisibilityChange)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSlug, slugsKey])

@@ -42,6 +42,29 @@ export interface ProjectDecision {
   rationale: string
 }
 
+export interface ProjectCodeBlock {
+  title: string
+  language: string
+  filename?: string
+  description?: string
+  content: string
+}
+
+export interface ProjectDiagramNode {
+  id: string
+  step: string
+  label: string
+  sublabel: string
+  layer: 'Source' | 'Process' | 'Storage' | 'Serve'
+}
+
+export interface ProjectDiagram {
+  title: string
+  caption: string
+  nodes: ProjectDiagramNode[]
+  edgeLabels: string[]
+}
+
 export interface ProjectItem {
   id: string
   code: string
@@ -55,6 +78,9 @@ export interface ProjectItem {
   repoUrl?: string
   articleSlug?: string
   images?: ProjectImage[]
+  diagram?: ProjectDiagram
+  codeParts?: ProjectCodeBlock[]
+  sqlParts?: ProjectCodeBlock[]
   wiki: {
     problem: string
     solution: string

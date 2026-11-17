@@ -250,8 +250,101 @@ export const PROJECTS: ProjectItem[] = [
     summary:
       'Metadata-driven Databricks pipeline unifying operational banking databases and payment gateway logs into governed analytical layers.',
     articleSlug: 'idempotent-cdc-medallion-lakehouse',
-    // To attach screenshots later: place files in web/public/projects/ and uncomment:
-    // images: [{ src: '/projects/alphapay-1.png', alt: '...', title: '...', context: '...' }],
+    images: [
+      {
+        src: '/projects/alphapay-medallion.svg',
+        alt: 'Financial Payment Lakehouse Medallion Architecture temp blueprint',
+        title: 'Medallion Lakehouse Flow (Temp Visual)',
+        context:
+          'Temp placeholder showing the Bronze, Silver, and Gold Databricks Medallion layers. Replace web/public/projects/alphapay-medallion.svg with your actual Databricks workflow or lineage screenshot.',
+      },
+      {
+        src: '/projects/alphapay-reconciliation.svg',
+        alt: 'Payment gateway settlement and latency monitoring temp visual',
+        title: 'Gateway Reconciliation Telemetry (Temp Visual)',
+        context:
+          'Temp placeholder representing the reconciliation dashboard across CMI, PayZone, Fatourati, and CashPlus. Replace with a screenshot of your BI or Delta audit view.',
+      },
+    ],
+    diagram: {
+      title: 'Medallion Ingestion & Idempotent Merge Topology',
+      caption: 'Watermark-driven extraction feeding immutable Bronze landing, deduplicated Silver core, and governed Gold risk marts.',
+      nodes: [
+        { id: 'n1', step: '01', label: 'Banking & Gateways', sublabel: 'PostgreSQL / CSV Feeds', layer: 'Source' },
+        { id: 'n2', step: '02', label: 'Bronze Delta Layer', sublabel: 'Append-Only + Batch ID', layer: 'Storage' },
+        { id: 'n3', step: '03', label: 'Silver Core Engine', sublabel: 'PySpark Dedup + Quarantine', layer: 'Process' },
+        { id: 'n4', step: '04', label: 'Gold Risk Marts', sublabel: 'Delta Views + BI Layer', layer: 'Serve' },
+      ],
+      edgeLabels: ['Watermark Pull', 'Schema Guard', 'Idempotent MERGE'],
+    },
+    codeParts: [
+      {
+        title: 'Metadata-Driven Watermark Extractor',
+        language: 'python',
+        filename: 'ingest/watermark_loader.py',
+        description: 'Reads per-entity watermark state from the control table and loads incremental slices into Bronze Delta with batch audit metadata.',
+        content: `from pyspark.sql import SparkSession, functions as F
+
+def load_incremental_bronze(spark: SparkSession, cfg: dict, batch_id: str) -> int:
+    last_wm = get_watermark(spark, cfg["table_name"])
+
+    query = (
+        f"(SELECT * FROM {cfg['source_table']} "
+        f"WHERE {cfg['watermark_col']} > '{last_wm}') AS src"
+    )
+
+    df = (
+        spark.read.format("jdbc")
+        .option("url", cfg["jdbc_url"])
+        .option("dbtable", query)
+        .load()
+        .withColumn("_batch_id", F.lit(batch_id))
+        .withColumn("_ingested_at", F.current_timestamp())
+    )
+
+    count = df.count()
+    if count > 0:
+        df.write.format("delta").mode("append").saveAsTable(cfg["bronze_table"])
+        max_wm = df.agg(F.max(cfg["watermark_col"])).first()[0]
+        commit_watermark(spark, cfg["table_name"], max_wm, batch_id)
+    return count`,
+      },
+    ],
+    sqlParts: [
+      {
+        title: 'Idempotent Silver Deduplication & Merge',
+        language: 'sql',
+        filename: 'models/silver_payments_merge.sql',
+        description: 'Keeps the latest settled event per transaction_id using a window function and upserts atomically into Silver Delta.',
+        content: `WITH ranked_events AS (
+  SELECT
+    transaction_id,
+    customer_id,
+    gateway_code,
+    CAST(amount_mad AS DECIMAL(18, 2)) AS amount_mad,
+    settlement_status,
+    event_ts,
+    ROW_NUMBER() OVER (
+      PARTITION BY transaction_id
+      ORDER BY event_ts DESC, _ingested_at DESC
+    ) AS rn
+  FROM bronze.gateway_transactions
+  WHERE transaction_id IS NOT NULL
+    AND amount_mad >= 0
+)
+MERGE INTO silver.fact_payments AS target
+USING (SELECT * FROM ranked_events WHERE rn = 1) AS src
+ON target.transaction_id = src.transaction_id
+WHEN MATCHED AND src.event_ts >= target.event_ts THEN
+  UPDATE SET
+    target.amount_mad = src.amount_mad,
+    target.settlement_status = src.settlement_status,
+    target.event_ts = src.event_ts
+WHEN NOT MATCHED THEN
+  INSERT (transaction_id, customer_id, gateway_code, amount_mad, settlement_status, event_ts)
+  VALUES (src.transaction_id, src.customer_id, src.gateway_code, src.amount_mad, src.settlement_status, src.event_ts);`,
+      },
+    ],
     wiki: {
       problem:
         'Payment telemetry across card networks, cash agencies, and credit bureau feeds arrived on different schedules and formats, causing duplicate records and brittle manual reconciliation.',
@@ -316,6 +409,82 @@ export const PROJECTS: ProjectItem[] = [
       'Distributed crawling and enrichment platform processing DOM trees, network telemetry, and OCR signals across 100K+ websites.',
     repoUrl: 'https://github.com/NIDNASSER-Abdelmajid/crawler-addisclosure',
     articleSlug: 'crawling-100k-domains-clean-etl',
+    images: [
+      {
+        src: '/projects/web-privacy-crawler.svg',
+        alt: 'Distributed crawler and Parquet checkpoint temp blueprint',
+        title: 'Crawler & Parquet Checkpoint Topology (Temp Visual)',
+        context:
+          'Temp placeholder showing the decoupled headless crawler pool writing partitioned Parquet checkpoints for Spark enrichment across 100K+ Tranco domains.',
+      },
+      {
+        src: '/projects/web-privacy-ocr.svg',
+        alt: 'Asset hash deduplication and OCR taxonomy temp blueprint',
+        title: 'Hash Deduplication & OCR Taxonomy (Temp Visual)',
+        context:
+          'Temp placeholder illustrating SHA-256 creative deduplication prior to OCR and 12-class ad disclosure classification. Replace with your pipeline or taxonomy visual.',
+      },
+    ],
+    diagram: {
+      title: 'Decoupled Web Capture & Spark OCR Enrichment Flow',
+      caption: 'Isolates flaky network crawling from distributed Spark compute via partitioned Parquet checkpoints and cryptographic creative hashing.',
+      nodes: [
+        { id: 'n1', step: '01', label: 'Tranco Domain Queue', sublabel: '100K+ Targets', layer: 'Source' },
+        { id: 'n2', step: '02', label: 'Parquet Checkpoints', sublabel: 'DOM + Network Logs', layer: 'Storage' },
+        { id: 'n3', step: '03', label: 'Spark Hash & OCR', sublabel: 'SHA-256 Dedup + Text', layer: 'Process' },
+        { id: 'n4', step: '04', label: 'Disclosure Dataset', sublabel: '12 Classes / 35 Subclasses', layer: 'Serve' },
+      ],
+      edgeLabels: ['Async Flush', 'Hash Dedup', 'Feature Export'],
+    },
+    codeParts: [
+      {
+        title: 'Pre-OCR Creative Hash Deduplication in PySpark',
+        language: 'python',
+        filename: 'enrichment/dedup_ocr_pipeline.py',
+        description: 'Hashes third-party ad creative binaries across domains so OCR executes once per unique asset instead of repeating across thousands of sites.',
+        content: `from pyspark.sql import DataFrame, functions as F
+
+def extract_unique_creatives_for_ocr(raw_assets: DataFrame) -> DataFrame:
+    hashed = (
+        raw_assets
+        .filter(F.col("image_bytes").isNotNull())
+        .withColumn("asset_sha256", F.sha2(F.col("image_bytes"), 256))
+    )
+
+    unique_assets = (
+        hashed
+        .groupBy("asset_sha256")
+        .agg(
+            F.first("image_bytes").alias("image_bytes"),
+            F.countDistinct("domain").alias("domain_reach"),
+            F.collect_set("ad_network").alias("networks"),
+        )
+    )
+    return unique_assets`,
+      },
+    ],
+    sqlParts: [
+      {
+        title: 'Disclosure Taxonomy Coverage Aggregation',
+        language: 'sql',
+        filename: 'analytics/disclosure_taxonomy_rollup.sql',
+        description: 'Summarizes ad disclosure compliance rates across Tranco rank tiers and the 12-class disclosure taxonomy.',
+        content: `SELECT
+  CASE
+    WHEN tranco_rank <= 1000 THEN 'Top 1K'
+    WHEN tranco_rank <= 10000 THEN '1K - 10K'
+    ELSE '10K - 100K'
+  END AS rank_tier,
+  top_category,
+  COUNT(DISTINCT domain) AS domains_observed,
+  COUNT(*) AS total_ad_slots,
+  ROUND(100.0 * SUM(CASE WHEN has_explicit_disclosure THEN 1 ELSE 0 END) / COUNT(*), 2)
+    AS disclosure_rate_pct
+FROM curated.web_ad_disclosures
+GROUP BY 1, 2
+ORDER BY 1, total_ad_slots DESC;`,
+      },
+    ],
     wiki: {
       problem:
         'Large-scale web measurement studies generate noisy DOM trees, repeating third-party creatives, and slow OCR workloads that easily stall if coupled tightly to headless crawlers.',
@@ -380,6 +549,90 @@ export const PROJECTS: ProjectItem[] = [
       'Automated ETL platform unifying Salesforce, Odoo, and SAP financial feeds into a governed Star Schema warehouse for executive BI.',
     repoUrl: 'https://github.com/NIDNASSER-Abdelmajid/SALES-ANALYTICS-DASHBOARD',
     articleSlug: 'star-schema-multi-erp-warehouses',
+    images: [
+      {
+        src: '/projects/leyton-star-schema.svg',
+        alt: 'Multi-ERP Star Schema and Client Crosswalk temp blueprint',
+        title: 'Conformed Star Schema & Crosswalk (Temp Visual)',
+        context:
+          'Temp placeholder showing the Star Schema dimensional model unifying Salesforce, Odoo, and SAP through an auditable client identity crosswalk.',
+      },
+      {
+        src: '/projects/leyton-bi-reconciliation.svg',
+        alt: 'Finance ledger variance and BI KPI layer temp blueprint',
+        title: 'SAP Balance Gate & Executive BI (Temp Visual)',
+        context:
+          'Temp placeholder illustrating automated SAP ledger reconciliation before publishing CLV, margin, and retention KPIs to Power BI and Tableau.',
+      },
+    ],
+    diagram: {
+      title: 'Multi-ERP Dimensional Modeling & Reconciliation Pipeline',
+      caption: 'Conforms Salesforce, Odoo, and SAP feeds into a unified Star Schema protected by automated SAP period variance gates.',
+      nodes: [
+        { id: 'n1', step: '01', label: 'SFDC / Odoo / SAP', sublabel: 'CRM, Billing & Ledger', layer: 'Source' },
+        { id: 'n2', step: '02', label: 'Identity Crosswalk', sublabel: 'Unified Client Keys', layer: 'Process' },
+        { id: 'n3', step: '03', label: 'Star Schema DW', sublabel: 'Facts & Dimensions', layer: 'Storage' },
+        { id: 'n4', step: '04', label: 'Executive BI Suite', sublabel: 'Power BI & Tableau', layer: 'Serve' },
+      ],
+      edgeLabels: ['Incremental Pull', 'Crosswalk Join', 'Variance Gate'],
+    },
+    codeParts: [
+      {
+        title: 'Automated SAP Period Variance Gate',
+        language: 'python',
+        filename: 'quality/sap_reconciliation_check.py',
+        description: 'Blocks BI refresh if the warehouse invoice totals diverge from SAP general ledger period totals beyond tolerance.',
+        content: `from decimal import Decimal
+
+def verify_ledger_parity(dw_conn, period_key: str, tolerance: Decimal = Decimal("0.01")) -> None:
+    sql = """
+        SELECT
+            COALESCE(dw.total_eur, 0) AS dw_total,
+            COALESCE(sap.ledger_eur, 0) AS sap_total
+        FROM mart.monthly_invoice_summary dw
+        FULL OUTER JOIN staging.sap_gl_period_totals sap
+          ON dw.period_key = sap.period_key
+        WHERE COALESCE(dw.period_key, sap.period_key) = %s
+    """
+    dw_total, sap_total = dw_conn.fetch_one(sql, (period_key,))
+    variance = abs(Decimal(str(dw_total)) - Decimal(str(sap_total)))
+    if variance > tolerance:
+        raise RuntimeError(
+            f"Ledger reconciliation failed for {period_key}: variance={variance} EUR"
+        )`,
+      },
+    ],
+    sqlParts: [
+      {
+        title: 'Conformed Client Crosswalk & Cohort Retention Mart',
+        language: 'sql',
+        filename: 'warehouse/fact_client_revenue_mart.sql',
+        description: 'Resolves fragmented ERP identifiers onto a canonical client key and computes annual net revenue retention.',
+        content: `WITH conformed_invoices AS (
+  SELECT
+    xwalk.canonical_client_id,
+    DATE_TRUNC('month', inv.invoice_date) AS billing_month,
+    inv.source_system,
+    inv.native_invoice_id,
+    inv.net_amount_eur
+  FROM staging.all_erp_invoices inv
+  INNER JOIN core.dim_client_crosswalk xwalk
+    ON inv.source_system = xwalk.source_system
+   AND inv.native_client_id = xwalk.native_client_id
+)
+SELECT
+  canonical_client_id,
+  billing_month,
+  SUM(net_amount_eur) AS monthly_revenue_eur,
+  SUM(SUM(net_amount_eur)) OVER (
+    PARTITION BY canonical_client_id
+    ORDER BY billing_month
+    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+  ) AS cumulative_clv_eur
+FROM conformed_invoices
+GROUP BY canonical_client_id, billing_month;`,
+      },
+    ],
     wiki: {
       problem:
         'Customer, billing, and accounting metrics lived in separate Salesforce, Odoo, and SAP silos, forcing analysts into slow, error-prone spreadsheet reconciliations before reporting.',
@@ -443,6 +696,87 @@ export const PROJECTS: ProjectItem[] = [
     summary:
       'Partitioned Apache Kafka event pipeline with dead-letter recovery, containerized consumers, and real-time read projections.',
     repoUrl: 'https://github.com/NIDNASSER-Abdelmajid/Real-Time-Socket-Streaming',
+    images: [
+      {
+        src: '/projects/kafka-partitions.svg',
+        alt: 'Entity-keyed Kafka partitioning and dead-letter queue temp blueprint',
+        title: 'Kafka Partitioning & DLQ Flow (Temp Visual)',
+        context:
+          'Temp placeholder showing entity-keyed Kafka topics, consumer group offset commits, and isolated dead-letter routing for malformed payloads.',
+      },
+      {
+        src: '/projects/kafka-projections.svg',
+        alt: 'Real-time socket projection and Dockerized worker temp blueprint',
+        title: 'Live Socket Projections (Temp Visual)',
+        context:
+          'Temp placeholder illustrating Dockerized workers pushing low-latency state projections to live dashboards. Replace with your monitoring or Kafka UI screenshot.',
+      },
+    ],
+    diagram: {
+      title: 'Ordered Kafka Event Backbone & Dead-Letter Recovery',
+      caption: 'Guarantees per-entity ordering through keyed partitions and zero silent drops through manual offset commits and DLQ quarantine.',
+      nodes: [
+        { id: 'n1', step: '01', label: 'Event Producers', sublabel: 'Python / Java Services', layer: 'Source' },
+        { id: 'n2', step: '02', label: 'Keyed Kafka Topics', sublabel: 'Partitioned by entity_id', layer: 'Storage' },
+        { id: 'n3', step: '03', label: 'Worker Consumers', sublabel: 'Manual Offset + DLQ', layer: 'Process' },
+        { id: 'n4', step: '04', label: 'Live Projections', sublabel: 'WebSocket + Read Store', layer: 'Serve' },
+      ],
+      edgeLabels: ['Keyed Produce', 'At-Least-Once Poll', 'Push Projection'],
+    },
+    codeParts: [
+      {
+        title: 'Manual-Commit Kafka Consumer with Dead-Letter Routing',
+        language: 'python',
+        filename: 'streaming/event_consumer.py',
+        description: 'Validates each incoming event, routes malformed records to a replayable DLQ topic, and commits offsets only after downstream writes succeed.',
+        content: `import json
+
+def consume_with_dlq(consumer, dlq_producer, sink_writer):
+    for msg in consumer:
+        try:
+            payload = validate_event(json.loads(msg.value.decode("utf-8")))
+            sink_writer.apply_idempotent(
+                entity_id=payload["entity_id"],
+                event_seq=payload["seq"],
+                state=payload["state"],
+            )
+            consumer.commit()
+        except ValueError as err:
+            dlq_producer.send(
+                "events.dlq",
+                key=msg.key,
+                value=json.dumps({
+                    "raw": msg.value.decode("utf-8", errors="replace"),
+                    "error": str(err),
+                    "partition": msg.partition,
+                    "offset": msg.offset,
+                }).encode("utf-8"),
+            )
+            dlq_producer.flush()
+            consumer.commit()`,
+      },
+    ],
+    sqlParts: [
+      {
+        title: 'Idempotent Sequence-Guarded Projection Upsert',
+        language: 'sql',
+        filename: 'projections/upsert_entity_state.sql',
+        description: 'Prevents replayed or stale Kafka events from overwriting newer state by guarding updates with event_seq.',
+        content: `INSERT INTO realtime.entity_projections (
+  entity_id,
+  event_seq,
+  current_state,
+  updated_at
+)
+VALUES ($1, $2, $3, NOW())
+ON CONFLICT (entity_id) DO UPDATE
+SET
+  event_seq = EXCLUDED.event_seq,
+  current_state = EXCLUDED.current_state,
+  updated_at = EXCLUDED.updated_at
+WHERE EXCLUDED.event_seq > realtime.entity_projections.event_seq;`,
+      },
+    ],
     wiki: {
       problem:
         'Direct point-to-point webhooks broke easily during traffic bursts, dropped malformed payloads silently, and struggled to keep real-time client dashboards synchronized.',
@@ -504,6 +838,85 @@ export const PROJECTS: ProjectItem[] = [
     context: "ONDE'Child",
     summary:
       'Case ingestion, privacy-safe standardization, and NLP triage pipeline powering prioritized operational workflows in PostgreSQL.',
+    images: [
+      {
+        src: '/projects/onde-triage-flow.svg',
+        alt: 'Privacy-first case standardization pipeline temp blueprint',
+        title: 'PII Vault & Case Standardization (Temp Visual)',
+        context:
+          'Temp placeholder showing institutional record normalization with strict PII separation prior to analytics and model scoring.',
+      },
+      {
+        src: '/projects/onde-nlp-scoring.svg',
+        alt: 'NLP triage scoring API and append-only history temp blueprint',
+        title: 'NLP Triage API & Audit History (Temp Visual)',
+        context:
+          'Temp placeholder depicting the FastAPI scoring endpoint and append-only prediction audit log in PostgreSQL. Replace with your schema or workflow screenshot.',
+      },
+    ],
+    diagram: {
+      title: 'Privacy-First Case Ingestion & NLP Triage Architecture',
+      caption: 'Strips direct identifiers into an isolated vault before NLP feature extraction, versioned FastAPI scoring, and append-only audit storage.',
+      nodes: [
+        { id: 'n1', step: '01', label: 'Partner Case Feeds', sublabel: 'Forms & Spreadsheets', layer: 'Source' },
+        { id: 'n2', step: '02', label: 'PII Vault Separator', sublabel: 'De-Identified Text', layer: 'Process' },
+        { id: 'n3', step: '03', label: 'NLP Triage Service', sublabel: 'Scikit-learn + FastAPI', layer: 'Serve' },
+        { id: 'n4', step: '04', label: 'PostgreSQL Audit', sublabel: 'Append-Only Verdicts', layer: 'Storage' },
+      ],
+      edgeLabels: ['Normalize Schema', 'Strip PII', 'Versioned Verdict'],
+    },
+    codeParts: [
+      {
+        title: 'FastAPI Versioned Triage Scoring Endpoint',
+        language: 'python',
+        filename: 'serving/triage_api.py',
+        description: 'Scores de-identified case narratives using a versioned NLP pipeline and writes an immutable audit row back to PostgreSQL.',
+        content: `from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+class CasePayload(BaseModel):
+    case_token: str
+    narrative_clean: str
+
+@app.post("/v1/triage/score")
+def score_case(payload: CasePayload):
+    priority_prob = float(model.predict_proba([payload.narrative_clean])[0][1])
+    tier = "HIGH" if priority_prob >= 0.75 else "MEDIUM" if priority_prob >= 0.4 else "STANDARD"
+
+    db.execute(
+        """
+        INSERT INTO triage.prediction_history (case_token, model_version, score, priority_tier)
+        VALUES (%s, %s, %s, %s)
+        """,
+        (payload.case_token, MODEL_VERSION, round(priority_prob, 4), tier),
+    )
+    return {"case_token": payload.case_token, "priority_tier": tier, "model_version": MODEL_VERSION}`,
+      },
+    ],
+    sqlParts: [
+      {
+        title: 'Latest Case Priority View Over Append-Only Audit Log',
+        language: 'sql',
+        filename: 'db/vw_active_case_queue.sql',
+        description: 'Surfaces the latest triage verdict per case while preserving full historical model assessment lineage for case officers.',
+        content: `CREATE OR REPLACE VIEW triage.vw_active_case_queue AS
+SELECT DISTINCT ON (c.case_token)
+  c.case_token,
+  c.region_code,
+  c.opened_at,
+  p.priority_tier,
+  p.score,
+  p.model_version,
+  p.scored_at
+FROM core.cases c
+LEFT JOIN triage.prediction_history p
+  ON p.case_token = c.case_token
+WHERE c.status = 'OPEN'
+ORDER BY c.case_token, p.scored_at DESC;`,
+      },
+    ],
     wiki: {
       problem:
         'Case reports from institutional partners arrived with inconsistent schemas and unstructured narrative notes, slowing urgent prioritization decisions.',
@@ -555,6 +968,90 @@ export const PROJECTS: ProjectItem[] = [
     summary:
       'Production Scrapy and Selenium extraction pipelines delivering validated market feeds and dynamic web catalogs to SQL and Parquet.',
     repoUrl: 'https://github.com/NIDNASSER-Abdelmajid/ScrapyGram',
+    images: [
+      {
+        src: '/projects/extractors-pipeline.svg',
+        alt: 'Resilient Scrapy and Selenium extraction engine temp blueprint',
+        title: 'Modular Extraction Engine (Temp Visual)',
+        context:
+          'Temp placeholder showing adaptive Scrapy and Selenium workers with runtime item validation and batched loading.',
+      },
+      {
+        src: '/projects/extractors-drift.svg',
+        alt: 'Pre-load row-count drift guard and archive snapshots temp blueprint',
+        title: 'Row-Count Drift Guard & Archives (Temp Visual)',
+        context:
+          'Temp placeholder illustrating baseline row-count verification that blocks broken DOM scrapes from overwriting valid historical snapshots.',
+      },
+    ],
+    diagram: {
+      title: 'Drift-Protected Web Extraction & Batched Loading Flow',
+      caption: 'Validates scraped fields and checks batch row counts against 7-day rolling baselines before committing batched SQL upserts and Parquet archives.',
+      nodes: [
+        { id: 'n1', step: '01', label: 'Dynamic Web Targets', sublabel: 'APIs & JS Storefronts', layer: 'Source' },
+        { id: 'n2', step: '02', label: 'Scrapy / Selenium', sublabel: 'Throttled Workers', layer: 'Process' },
+        { id: 'n3', step: '03', label: 'Schema & Drift Gate', sublabel: 'Baseline Row Checks', layer: 'Process' },
+        { id: 'n4', step: '04', label: 'Postgres & Parquet', sublabel: 'Batched Snapshots', layer: 'Storage' },
+      ],
+      edgeLabels: ['Cursor Crawl', 'Validate Items', 'Batched Upsert'],
+    },
+    codeParts: [
+      {
+        title: 'Pre-Load Row-Count Drift Guard & Batched Writer',
+        language: 'python',
+        filename: 'pipelines/drift_guarded_loader.py',
+        description: 'Compares extracted batch volume against the 7-day baseline before flushing multi-hundred-row chunks into PostgreSQL.',
+        content: `from psycopg2.extras import execute_values
+
+def commit_validated_snapshot(conn, source_id: str, rows: list[tuple]) -> int:
+    baseline = fetch_seven_day_avg_count(conn, source_id)
+    if baseline > 0 and len(rows) < baseline * 0.65:
+        raise ValueError(
+            f"Drift guard tripped for {source_id}: got {len(rows)} vs baseline {baseline:.0f}"
+        )
+
+    upsert_sql = """
+        INSERT INTO market.catalog_snapshots (source_id, sku_id, price_usd, captured_date)
+        VALUES %s
+        ON CONFLICT (source_id, sku_id, captured_date)
+        DO UPDATE SET price_usd = EXCLUDED.price_usd
+    """
+    with conn.cursor() as cur:
+        execute_values(cur, upsert_sql, rows, page_size=500)
+    conn.commit()
+    return len(rows)`,
+      },
+    ],
+    sqlParts: [
+      {
+        title: '7-Day Rolling Baseline & Daily Price Delta Query',
+        language: 'sql',
+        filename: 'monitoring/snapshot_drift_and_deltas.sql',
+        description: 'Detects sudden catalog volume drops and computes day-over-day price changes across scraped SKUs.',
+        content: `WITH daily_counts AS (
+  SELECT
+    source_id,
+    captured_date,
+    COUNT(*) AS row_count,
+    AVG(COUNT(*)) OVER (
+      PARTITION BY source_id
+      ORDER BY captured_date
+      ROWS BETWEEN 7 PRECEDING AND 1 PRECEDING
+    ) AS rolling_7d_baseline
+  FROM market.catalog_snapshots
+  GROUP BY source_id, captured_date
+)
+SELECT
+  source_id,
+  captured_date,
+  row_count,
+  ROUND(rolling_7d_baseline, 1) AS baseline_7d,
+  ROUND(100.0 * (row_count - rolling_7d_baseline) / NULLIF(rolling_7d_baseline, 0), 2)
+    AS variance_pct
+FROM daily_counts
+ORDER BY captured_date DESC, source_id;`,
+      },
+    ],
     wiki: {
       problem:
         'Client market feeds and dynamic JavaScript storefronts frequently changed markup or throttled naive requests, breaking downstream pricing models.',

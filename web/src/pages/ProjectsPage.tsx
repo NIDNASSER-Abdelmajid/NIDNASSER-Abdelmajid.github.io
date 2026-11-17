@@ -12,7 +12,7 @@ import {
   X,
 } from 'lucide-react'
 import { GitHubIcon } from '../components/BrandIcons'
-import { ProjectDetailModalPage } from '../components/ProjectDetailModalPage'
+import { ProjectDetailPage } from '../components/ProjectDetailPage'
 import { PROJECTS } from '../data/portfolio'
 import type { ProjectCategory, ProjectItem } from '../types/portfolio'
 
@@ -95,6 +95,17 @@ export function ProjectsPage({ activeProjectId, onNavigate }: ProjectsPageProps)
     setSelectedTool('All Tools')
     setOnlyWithArticle(false)
     setQuery('')
+  }
+
+  if (activeProjectId) {
+    return (
+      <ProjectDetailPage
+        projectId={activeProjectId}
+        onBack={() => onNavigate('/projects')}
+        onSelectProject={(id) => onNavigate(`/projects/${id}`)}
+        onOpenArticle={(slug) => onNavigate(`/blog/${slug}`)}
+      />
+    )
   }
 
   return (
@@ -333,15 +344,6 @@ export function ProjectsPage({ activeProjectId, onNavigate }: ProjectsPageProps)
           </div>
         )}
       </div>
-
-      {activeProjectId && (
-        <ProjectDetailModalPage
-          projectId={activeProjectId}
-          onClose={() => onNavigate('/projects')}
-          onSelectProject={(id) => onNavigate(`/projects/${id}`)}
-          onOpenArticle={(slug) => onNavigate(`/blog/${slug}`)}
-        />
-      )}
     </section>
   )
 }

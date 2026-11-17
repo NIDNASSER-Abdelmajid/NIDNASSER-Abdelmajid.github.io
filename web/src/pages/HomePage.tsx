@@ -11,7 +11,7 @@ interface HomePageProps {
 }
 
 export function HomePage({ copied, onCopyEmail, onNavigate }: HomePageProps) {
-  const visitorCount = useVisitorCount()
+  const { total: visitorCount, currentHourCount, hourLabel } = useVisitorCount()
 
   return (
     <section className="flex min-h-[calc(100vh-8rem)] items-center py-10 @2xl:py-16">
@@ -35,7 +35,11 @@ export function HomePage({ copied, onCopyEmail, onNavigate }: HomePageProps) {
                 </div>
                 <div
                   className="mt-1 flex items-center gap-1 font-mono text-xs text-neutral-500 dark:text-neutral-500"
-                  title="Total aggregated visitors"
+                  title={
+                    currentHourCount !== null
+                      ? `Aggregated site visitors (1h cookie, 10s dwell) | ${hourLabel}: +${currentHourCount}`
+                      : 'Aggregated site visitors (1h cookie, 10s dwell)'
+                  }
                 >
                   <Users className="h-3 w-3 shrink-0" strokeWidth={1.8} />
                   <span>

@@ -59,7 +59,7 @@ export function Sidebar({
   onOpenPalette,
 }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const visitorCount = useVisitorCount()
+  const { total: visitorCount, currentHourCount, hourLabel } = useVisitorCount()
 
   const handleNav = (path: string) => {
     onNavigate(path)
@@ -91,7 +91,11 @@ export function Sidebar({
             </div>
             <div
               className="mt-1 flex items-center gap-1 font-mono text-xs text-neutral-500 dark:text-neutral-500"
-              title="Total aggregated visitors"
+              title={
+                currentHourCount !== null
+                  ? `Aggregated site visitors (1h cookie, 10s dwell) | ${hourLabel}: +${currentHourCount}`
+                  : 'Aggregated site visitors (1h cookie, 10s dwell)'
+              }
             >
               <Users className="h-3 w-3 shrink-0" strokeWidth={1.8} />
               <span>
