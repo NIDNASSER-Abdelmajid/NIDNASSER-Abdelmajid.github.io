@@ -1,7 +1,7 @@
 import { ArrowRight, BookOpen, Check, Copy, MapPin, Users } from 'lucide-react'
 import { PipelineTopology } from '../components/PipelineTopology'
 import { ProfilePhoto } from '../components/ProfilePhoto'
-import { PROFILE } from '../data/portfolio'
+import { usePortfolioData } from '../data/portfolioStore'
 import { useVisitorCount } from '../hooks/useVisitorCount'
 
 interface HomePageProps {
@@ -11,6 +11,7 @@ interface HomePageProps {
 }
 
 export function HomePage({ copied, onCopyEmail, onNavigate }: HomePageProps) {
+  const { profile: PROFILE } = usePortfolioData()
   const { total: visitorCount, currentHourCount, hourLabel } = useVisitorCount()
 
   return (

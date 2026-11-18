@@ -10,8 +10,7 @@ import {
   Sun,
   X,
 } from 'lucide-react'
-import { BLOG_POSTS } from '../data/blog'
-import { PROFILE, PROJECTS } from '../data/portfolio'
+import { usePortfolioData } from '../data/portfolioStore'
 import type { ThemePreference } from '../hooks/useTheme'
 
 interface CommandItem {
@@ -38,6 +37,7 @@ export function CommandPalette({
   onSelectTheme,
   onCopyEmail,
 }: CommandPaletteProps) {
+  const { profile: PROFILE, projects: PROJECTS, blogPosts: BLOG_POSTS } = usePortfolioData()
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -195,7 +195,7 @@ export function CommandPalette({
     ]
 
     return [...navItems, ...projectItems, ...blogItems, ...utilityItems]
-  }, [onClose, onCopyEmail, onNavigate, onSelectTheme])
+  }, [BLOG_POSTS, PROFILE.email, PROJECTS, onClose, onCopyEmail, onNavigate, onSelectTheme])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   AlertCircle,
   ArrowLeft,
@@ -16,14 +16,13 @@ import {
   Search,
   X,
 } from 'lucide-react'
-import { BLOG_POSTS } from '../data/blog'
+import { usePortfolioData } from '../data/portfolioStore'
 import { useBlogReads } from '../hooks/useBlogReads'
 import type { BlogImage, BlogPost } from '../types/portfolio'
 
 type TopicFilter = 'All' | BlogPost['topic']
 
 const TOPICS: TopicFilter[] = ['All', 'Lakehouse', 'ETL & Ingestion', 'Data Modeling']
-const POST_SLUGS = BLOG_POSTS.map((p) => p.slug)
 
 function formatReadsLabel(count: number | null): string {
   if (count === null) return '...'
@@ -36,13 +35,15 @@ interface BlogPageProps {
 }
 
 export function BlogPage({ activeSlug, onNavigate }: BlogPageProps) {
+  const { blogPosts: BLOG_POSTS } = usePortfolioData()
+  const postSlugs = useMemo(() => BLOG_POSTS.map((p) => p.slug), [BLOG_POSTS])
   const [topic, setTopic] = useState<TopicFilter>('All')
   const [query, setQuery] = useState('')
   const [copiedCodeKey, setCopiedCodeKey] = useState<string | null>(null)
   const [openContextMap, setOpenContextMap] = useState<Record<string, boolean>>({})
   const [zoomedImage, setZoomedImage] = useState<BlogImage | null>(null)
 
-  const readsMap = useBlogReads(POST_SLUGS, activeSlug)
+  const readsMap = useBlogReads(postSlugs, activeSlug)
 
   useEffect(() => {
     setOpenContextMap({})

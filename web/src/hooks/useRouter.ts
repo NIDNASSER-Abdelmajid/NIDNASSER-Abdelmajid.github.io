@@ -8,11 +8,25 @@ export type RouteMatch =
   | { page: 'stack' }
   | { page: 'blog'; slug: string | null }
   | { page: 'contact' }
+  | { page: 'admin' }
 
-function normalizeHash(rawHash: string): string {
-  const cleaned = rawHash.replace(/^#/, '').trim()
+function normalizePath(raw: string): string {
+  const cleaned = raw.replace(/^#/, '').trim()
   if (!cleaned || cleaned === '/') return '/'
   return cleaned.startsWith('/') ? cleaned : `/${cleaned}`
+}
+
+function getInitialRoutePath(): string {
+  if (typeof window === 'undefined') return '/'
+  const fromHash = window.location.hash.replace(/^#/, '').trim()
+  if (fromHash && fromHash !== '/') {
+    return normalizePath(fromHash)
+  }
+  const fromPathname = window.location.pathname.replace(/\/+$/, '')
+  if (fromPathname === '/admin/joyboy/laughtale') {
+    return '/admin/joyboy/laughtale'
+  }
+  return '/'
 }
 
 export function parseRoute(path: string): RouteMatch {
@@ -20,6 +34,15 @@ export function parseRoute(path: string): RouteMatch {
   const parts = normalized.split('/').filter(Boolean)
 
   if (parts.length === 0) return { page: 'home' }
+
+  if (
+    parts.length === 3 &&
+    parts[0] === 'admin' &&
+    parts[1] === 'joyboy' &&
+    parts[2] === 'laughtale'
+  ) {
+    return { page: 'admin' }
+  }
 
   const [section, param] = parts
   switch (section) {
@@ -41,13 +64,11 @@ export function parseRoute(path: string): RouteMatch {
 }
 
 export function useRouter() {
-  const [path, setPath] = useState<string>(() =>
-    typeof window !== 'undefined' ? normalizeHash(window.location.hash) : '/'
-  )
+  const [path, setPath] = useState<string>(getInitialRoutePath)
 
   useEffect(() => {
     const onHashChange = () => {
-      setPath(normalizeHash(window.location.hash))
+      setPath(normalizePath(window.location.hash))
       window.scrollTo({ top: 0, behavior: 'auto' })
     }
     window.addEventListener('hashchange', onHashChange)
@@ -56,7 +77,7 @@ export function useRouter() {
 
   const navigate = useCallback((nextPath: string) => {
     const target = nextPath.startsWith('/') ? nextPath : `/${nextPath}`
-    if (normalizeHash(window.location.hash) === target) {
+    if (normalizePath(window.location.hash) === target) {
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }

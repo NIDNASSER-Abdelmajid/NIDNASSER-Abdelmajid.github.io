@@ -1,6 +1,6 @@
 import { ArrowUpRight, Check, Copy, Mail, MapPin, Terminal } from 'lucide-react'
 import { GitHubIcon, LinkedInIcon } from '../components/BrandIcons'
-import { PROFILE } from '../data/portfolio'
+import { usePortfolioData } from '../data/portfolioStore'
 
 interface ContactPageProps {
   copied: boolean
@@ -15,6 +15,7 @@ const FOCUS_TAGS = [
 ]
 
 export function ContactPage({ copied, onCopyEmail }: ContactPageProps) {
+  const { profile: PROFILE } = usePortfolioData()
   return (
     <section className="py-10 sm:py-14">
       <div className="mx-auto max-w-6xl px-4 sm:px-8">

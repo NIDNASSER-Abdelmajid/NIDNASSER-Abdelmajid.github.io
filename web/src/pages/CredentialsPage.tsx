@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ArrowUpRight, Award, BadgeCheck, Eye, Trophy, X } from 'lucide-react'
-import { CREDENTIALS } from '../data/portfolio'
+import { usePortfolioData } from '../data/portfolioStore'
 import type { CredentialItem } from '../types/portfolio'
 
 type CredFilter = 'All' | CredentialItem['category']
@@ -8,6 +8,7 @@ type CredFilter = 'All' | CredentialItem['category']
 const FILTERS: CredFilter[] = ['All', 'Certification', 'Recognition']
 
 export function CredentialsPage() {
+  const { credentials: CREDENTIALS } = usePortfolioData()
   const [filter, setFilter] = useState<CredFilter>('All')
   const [previewItem, setPreviewItem] = useState<CredentialItem | null>(null)
 

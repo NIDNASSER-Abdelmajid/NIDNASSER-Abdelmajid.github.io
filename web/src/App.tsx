@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
 import { CommandPalette } from './components/CommandPalette'
 import { Footer } from './components/Footer'
 import { Sidebar } from './components/Sidebar'
-import { PROFILE } from './data/portfolio'
+import { usePortfolioData } from './data/portfolioStore'
 import { parseRoute, useRouter, type RouteMatch } from './hooks/useRouter'
 import { useTheme } from './hooks/useTheme'
 import { BlogPage } from './pages/BlogPage'
@@ -13,7 +13,9 @@ import { HomePage } from './pages/HomePage'
 import { ProjectsPage } from './pages/ProjectsPage'
 import { StackPage } from './pages/StackPage'
 
-const SECTIONS: { id: RouteMatch['page']; path: string; label: string }[] = [
+const AdminPortal = lazy(() => import('./components/admin/AdminPortal'))
+
+const SECTIONS: { id: Exclude<RouteMatch['page'], 'admin'>; path: string; label: string }[] = [
   { id: 'home', path: '/', label: 'Overview' },
   { id: 'projects', path: '/projects', label: 'Projects' },
   { id: 'experience', path: '/experience', label: 'Experience' },
@@ -25,10 +27,13 @@ const SECTIONS: { id: RouteMatch['page']; path: string; label: string }[] = [
 
 export function App() {
   const { path, route, navigate } = useRouter()
+  const { profile } = usePortfolioData()
   const { preference, resolvedTheme, setPreference, toggleTheme } = useTheme()
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([])
+
+  const isAdminRoute = route.page === 'admin'
 
   const activeIndex = Math.max(
     0,
@@ -36,10 +41,10 @@ export function App() {
   )
 
   const handleCopyEmail = useCallback(() => {
-    navigator.clipboard?.writeText(PROFILE.email).catch(() => {})
+    navigator.clipboard?.writeText(profile.email).catch(() => {})
     setCopied(true)
     window.setTimeout(() => setCopied(false), 2000)
-  }, [])
+  }, [profile.email])
 
   const handleNavigate = useCallback(
     (nextPath: string) => {
@@ -65,6 +70,7 @@ export function App() {
 
   // Keyboard navigation: Cmd/Ctrl+K for palette, ArrowLeft/ArrowRight to slide sections
   useEffect(() => {
+    if (isAdminRoute) return
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault()
@@ -111,7 +117,21 @@ export function App() {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [activeIndex, navigate, paletteOpen])
+  }, [activeIndex, isAdminRoute, navigate, paletteOpen])
+
+  if (isAdminRoute) {
+    return (
+      <Suspense
+        fallback={
+          <div className="flex min-h-screen items-center justify-center bg-neutral-50 font-mono text-xs text-neutral-500 dark:bg-neutral-950 dark:text-neutral-400">
+            Initializing security gate...
+          </div>
+        }
+      >
+        <AdminPortal />
+      </Suspense>
+    )
+  }
 
   return (
     <div className="fixed inset-0 h-screen w-screen overflow-hidden bg-neutral-50 text-neutral-950 dark:bg-neutral-950 dark:text-neutral-50">

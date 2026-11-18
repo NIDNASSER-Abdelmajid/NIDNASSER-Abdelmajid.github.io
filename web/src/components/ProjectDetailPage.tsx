@@ -20,7 +20,7 @@ import {
   Workflow,
   X,
 } from 'lucide-react'
-import { PROJECTS } from '../data/portfolio'
+import { usePortfolioData } from '../data/portfolioStore'
 import type { ProjectCodeBlock } from '../types/portfolio'
 import { GitHubIcon } from './BrandIcons'
 
@@ -98,6 +98,7 @@ export function ProjectDetailPage({
   onSelectProject,
   onOpenArticle,
 }: ProjectDetailPageProps) {
+  const { projects: PROJECTS } = usePortfolioData()
   const index = PROJECTS.findIndex((p) => p.id === projectId)
   const project = index >= 0 ? PROJECTS[index] : PROJECTS[0]
   const prevProject = index > 0 ? PROJECTS[index - 1] : null

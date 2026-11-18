@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Database, Layers, Radio, Server, Terminal } from 'lucide-react'
 import { StackLogo } from '../components/StackLogos'
-import { STACK_MATRIX } from '../data/portfolio'
+import { usePortfolioData } from '../data/portfolioStore'
 import type { StackRow } from '../types/portfolio'
 
 type StackFilter = 'all' | StackRow['layer']
@@ -22,6 +22,7 @@ const LAYER_ORDER: { id: StackRow['layer']; title: string; icon: typeof Layers }
 ]
 
 export function StackPage() {
+  const { stackMatrix: STACK_MATRIX } = usePortfolioData()
   const [activeLayer, setActiveLayer] = useState<StackFilter>('all')
   const currentTab = QUERY_TABS.find((t) => t.id === activeLayer) ?? QUERY_TABS[0]
 

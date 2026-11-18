@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import { GitHubIcon } from '../components/BrandIcons'
 import { ProjectDetailPage } from '../components/ProjectDetailPage'
-import { PROJECTS } from '../data/portfolio'
+import { usePortfolioData } from '../data/portfolioStore'
 import type { ProjectCategory, ProjectItem } from '../types/portfolio'
 
 const CATEGORIES: ProjectCategory[] = [
@@ -47,6 +47,7 @@ interface ProjectsPageProps {
 }
 
 export function ProjectsPage({ activeProjectId, onNavigate }: ProjectsPageProps) {
+  const { projects: PROJECTS } = usePortfolioData()
   const [selectedCategory, setSelectedCategory] = useState<ProjectCategory>('All')
   const [selectedTool, setSelectedTool] = useState<string>('All Tools')
   const [onlyWithArticle, setOnlyWithArticle] = useState(false)
@@ -63,7 +64,7 @@ export function ProjectsPage({ activeProjectId, onNavigate }: ProjectsPageProps)
       map[p.category] = (map[p.category] ?? 0) + 1
     }
     return map
-  }, [])
+  }, [PROJECTS])
 
   const filteredProjects = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -82,7 +83,7 @@ export function ProjectsPage({ activeProjectId, onNavigate }: ProjectsPageProps)
         project.stack.some((t) => t.toLowerCase().includes(q))
       return matchesCat && matchesTool && matchesArticle && matchesQuery
     })
-  }, [onlyWithArticle, query, selectedCategory, selectedTool])
+  }, [PROJECTS, onlyWithArticle, query, selectedCategory, selectedTool])
 
   const hasActiveFilters =
     selectedCategory !== 'All' ||

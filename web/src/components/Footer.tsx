@@ -1,7 +1,8 @@
 import { ArrowUp } from 'lucide-react'
-import { PROFILE } from '../data/portfolio'
+import { usePortfolioData } from '../data/portfolioStore'
 
 export function Footer() {
+  const { profile: PROFILE } = usePortfolioData()
   const scrollToTop = (e: React.MouseEvent<HTMLButtonElement>) => {
     const scrollContainer = e.currentTarget.closest('.overflow-y-auto')
     if (scrollContainer) {

@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { Briefcase, GraduationCap, MapPin } from 'lucide-react'
-import { EDUCATION, EXPERIENCES } from '../data/portfolio'
+import { usePortfolioData } from '../data/portfolioStore'
 
 type LogFilter = 'All' | 'Experience' | 'Education'
 
 const FILTERS: LogFilter[] = ['All', 'Experience', 'Education']
 
 export function ExperiencePage() {
+  const { experiences: EXPERIENCES, education: EDUCATION } = usePortfolioData()
   const [filter, setFilter] = useState<LogFilter>('All')
 
   const showExperience = filter === 'All' || filter === 'Experience'

@@ -16,7 +16,7 @@ import {
   Users,
   X,
 } from 'lucide-react'
-import { PROFILE } from '../data/portfolio'
+import { usePortfolioData } from '../data/portfolioStore'
 import type { RouteMatch } from '../hooks/useRouter'
 import type { ResolvedTheme, ThemePreference } from '../hooks/useTheme'
 import { useVisitorCount } from '../hooks/useVisitorCount'
@@ -58,6 +58,7 @@ export function Sidebar({
   onResetSystem,
   onOpenPalette,
 }: SidebarProps) {
+  const { profile: PROFILE } = usePortfolioData()
   const [mobileOpen, setMobileOpen] = useState(false)
   const { total: visitorCount, currentHourCount, hourLabel } = useVisitorCount()
 
